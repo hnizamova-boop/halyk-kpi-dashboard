@@ -5,90 +5,47 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>KPI — Группа Халык</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <style>
-:root {
-  --accent: #009A44;
-  --accent2: #00b84f;
-  --gold: #F5A623;
-  --green: #009A44;
-  --yellow: #F5A623;
-  --red: #e53935;
-  --bg: #f3faf5;
-  --card: #ffffff;
-  --border: #d0eada;
-  --text: #1a2e1f;
-  --muted: #5a7a63;
-  --safe: 0px;
+:root{
+  --accent:#009A44;--accent2:#00b84f;--gold:#F5A623;
+  --green:#009A44;--yellow:#F5A623;--red:#e53935;
+  --bg:#f3faf5;--card:#ffffff;--border:#d0eada;
+  --text:#1a2e1f;--muted:#5a7a63;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow:hidden;}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
 
-/* ── HEADER ── */
-.header{
-  background:linear-gradient(135deg,#006B2E 0%,#009A44 60%,#00b84f 100%);
-  color:#fff;
-  padding:14px 16px 12px;
-  padding-top:calc(14px + env(safe-area-inset-top));
-  flex-shrink:0;
-  position:relative;
-  z-index:10;
-  border-bottom:3px solid #F5A623;
-}
+.header{background:linear-gradient(135deg,#006B2E 0%,#009A44 60%,#00b84f 100%);color:#fff;padding:14px 16px 12px;padding-top:calc(14px + env(safe-area-inset-top));flex-shrink:0;position:relative;z-index:10;border-bottom:3px solid #F5A623;}
 .header-top{display:flex;align-items:center;justify-content:space-between;}
 .header h1{font-size:17px;font-weight:700;letter-spacing:-.3px;}
 .header-badge{background:rgba(255,255,255,.18);border-radius:20px;padding:3px 10px;font-size:11px;white-space:nowrap;}
 .header-sub{font-size:12px;opacity:.7;margin-top:3px;}
 
-/* ── SCROLL AREA ── */
 .scroll-area{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding:16px 14px 100px;}
 
-/* ── BOTTOM NAV ── */
-.bottom-nav{
-  position:fixed;bottom:0;left:0;right:0;
-  background:var(--card);
-  border-top:1px solid var(--border);
-  display:flex;
-  padding-bottom:env(safe-area-inset-bottom);
-  z-index:100;
-  box-shadow:0 -2px 12px rgba(0,0,0,.08);
-}
-.nav-item{
-  flex:1;display:flex;flex-direction:column;align-items:center;
-  padding:10px 4px 8px;
-  cursor:pointer;border:none;background:none;
-  color:var(--muted);font-size:10px;font-weight:500;gap:4px;
-  transition:color .2s;
-}
+.bottom-nav{position:fixed;bottom:0;left:0;right:0;background:var(--card);border-top:1px solid var(--border);display:flex;padding-bottom:env(safe-area-inset-bottom);z-index:100;box-shadow:0 -2px 12px rgba(0,0,0,.08);}
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;cursor:pointer;border:none;background:none;color:var(--muted);font-size:9px;font-weight:500;gap:4px;transition:color .2s;}
 .nav-item svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
 .nav-item.active{color:var(--accent);}
 .nav-item.active svg{stroke:var(--accent);}
 
-/* ── PANELS ── */
 .panel{display:none;animation:fadeIn .25s ease;}
 .panel.active{display:block;}
 @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-/* ── METRIC CARDS ── */
 .metric-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
-.metric-card{
-  background:var(--card);border-radius:14px;padding:14px 12px;
-  border:1px solid var(--border);
-}
+.metric-card{background:var(--card);border-radius:14px;padding:14px 12px;border:1px solid var(--border);}
 .metric-label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px;line-height:1.3;}
 .metric-value{font-size:24px;font-weight:700;color:var(--accent);margin:4px 0 2px;line-height:1;}
 .metric-sub{font-size:11px;color:var(--muted);}
 
-/* ── SECTION TITLE ── */
 .section-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin:18px 0 10px;}
 
-/* ── COMPANY CARDS (horizontal scroll) ── */
 .company-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:6px;margin-bottom:14px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
 .company-scroll::-webkit-scrollbar{display:none;}
-.company-card{
-  min-width:140px;background:var(--card);border:1px solid var(--border);
-  border-radius:14px;padding:14px 12px;flex-shrink:0;
-}
+.company-card{min-width:140px;background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 12px;flex-shrink:0;}
 .co-name{font-size:11px;font-weight:700;color:var(--accent);margin-bottom:6px;line-height:1.3;}
 .co-profit{font-size:18px;font-weight:700;line-height:1;}
 .co-roe{font-size:11px;color:var(--muted);margin:3px 0 8px;}
@@ -96,65 +53,72 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .progress-fill{height:100%;border-radius:4px;transition:width .6s;}
 .progress-label{font-size:11px;margin-top:3px;text-align:right;font-weight:600;}
 
-/* ── CHART BOX ── */
 .chart-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
 .chart-title{font-size:13px;font-weight:600;margin-bottom:12px;color:var(--text);}
 canvas{max-height:220px;}
 
-/* ── LEGEND ── */
 .legend{display:flex;flex-wrap:wrap;gap:8px 14px;margin-bottom:12px;}
 .legend-item{display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);}
 .legend-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 
-/* ── FILTER BAR ── */
 .filter-bar{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
 .filter-bar label{font-size:13px;font-weight:500;color:var(--muted);}
-.filter-bar select{
-  padding:8px 12px;border:1px solid var(--border);border-radius:10px;
-  font-size:13px;background:var(--card);color:var(--text);flex:1;min-width:0;
-  -webkit-appearance:none;
-}
+.filter-bar select{padding:8px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;background:var(--card);color:var(--text);flex:1;min-width:0;-webkit-appearance:none;}
 
-/* ── KPI TABLE ── */
 .kpi-table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden;margin-bottom:14px;}
 .kpi-table-wrap table{width:100%;border-collapse:collapse;font-size:12px;}
-.kpi-table-wrap th{background:var(--accent);color:#fff;padding:10px 10px;text-align:center;font-weight:600;font-size:11px;}
+.kpi-table-wrap th{background:var(--accent);color:#fff;padding:10px;text-align:center;font-weight:600;font-size:11px;}
 .kpi-table-wrap th:first-child{text-align:left;}
 .kpi-table-wrap td{padding:9px 10px;border-bottom:1px solid var(--border);text-align:center;font-size:12px;}
-.kpi-table-wrap td:first-child{text-align:left;font-weight:500;font-size:11px;color:var(--text);}
+.kpi-table-wrap td:first-child{text-align:left;font-weight:500;font-size:11px;}
 .kpi-table-wrap tr:last-child td{border-bottom:none;}
 .badge{display:inline-block;padding:2px 7px;border-radius:20px;font-size:10px;font-weight:700;}
 .badge-green{background:#d4f0e0;color:#006B2E;}
 .badge-yellow{background:#fdf0d5;color:#8a5a00;}
 .badge-red{background:#fde8e8;color:#b71c1c;}
 
-/* ── AI SECTION ── */
 .ai-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
 .ai-title{font-size:14px;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px;}
-.ai-key-input{
-  width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;
-  font-size:13px;font-family:monospace;margin-bottom:10px;background:var(--bg);
-  color:var(--text);
-}
-.btn{
-  width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;
-  font-size:14px;font-weight:700;transition:all .2s;margin-bottom:8px;
-}
+.ai-key-input{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:10px;font-size:13px;font-family:monospace;margin-bottom:10px;background:var(--bg);color:var(--text);}
+.btn{width:100%;padding:13px;border-radius:12px;border:none;cursor:pointer;font-size:14px;font-weight:700;transition:all .2s;margin-bottom:8px;}
 .btn-primary{background:var(--accent);color:#fff;}
-.btn-primary:active{background:#0a3a63;transform:scale(.98);}
+.btn-primary:active{background:#006B2E;transform:scale(.98);}
 .btn-secondary{background:var(--bg);color:var(--accent);border:1px solid var(--border);}
-.btn-secondary:active{background:#e2e8f0;transform:scale(.98);}
+.btn-secondary:active{background:#c8e6d4;transform:scale(.98);}
+.btn-gold{background:var(--gold);color:#fff;}
+.btn-gold:active{background:#d4891a;transform:scale(.98);}
 .btn-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px;}
 .btn-grid .btn{font-size:12px;padding:11px 8px;}
-.ai-response{
-  background:var(--bg);border:1px solid var(--border);border-radius:10px;
-  padding:14px;font-size:13px;line-height:1.7;white-space:pre-wrap;
-  min-height:70px;color:var(--text);
-}
+.ai-response{background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:14px;font-size:13px;line-height:1.7;white-space:pre-wrap;min-height:70px;color:var(--text);}
 .ai-loading{color:var(--muted);font-style:italic;}
 .ai-note{font-size:10px;color:var(--muted);margin-top:8px;line-height:1.5;}
 
-/* ── DESKTOP OVERRIDES ── */
+/* ── UPLOAD TAB ── */
+.upload-hero{background:var(--card);border:2px dashed var(--border);border-radius:16px;padding:32px 20px;text-align:center;margin-bottom:16px;transition:all .2s;cursor:pointer;}
+.upload-hero.drag-over{border-color:var(--accent);background:#e8f5ee;}
+.upload-icon{width:52px;height:52px;background:#e8f5ee;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;}
+.upload-icon svg{width:26px;height:26px;stroke:var(--accent);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round;}
+.upload-title{font-size:15px;font-weight:700;color:var(--text);margin-bottom:6px;}
+.upload-sub{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:16px;}
+#fileInput{display:none;}
+.upload-status{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:14px 16px;margin-bottom:14px;display:none;}
+.upload-status.visible{display:block;}
+.status-row{display:flex;align-items:center;gap:10px;font-size:13px;}
+.status-icon{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;}
+.status-ok{background:#d4f0e0;color:#006B2E;}
+.status-err{background:#fde8e8;color:#b71c1c;}
+.status-info{font-weight:600;color:var(--text);}
+.status-sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+.template-box{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:16px;margin-bottom:14px;}
+.template-title{font-size:13px;font-weight:700;margin-bottom:10px;}
+.sheet-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:12px;}
+.sheet-row:last-child{border-bottom:none;}
+.sheet-tag{background:#e8f5ee;color:#006B2E;border-radius:6px;padding:2px 8px;font-size:10px;font-weight:700;white-space:nowrap;flex-shrink:0;}
+.sheet-desc{color:var(--muted);line-height:1.5;}
+
+.data-source-badge{display:inline-flex;align-items:center;gap:5px;background:#e8f5ee;color:var(--accent);border-radius:20px;padding:3px 10px;font-size:11px;font-weight:600;margin-bottom:12px;}
+
 @media(min-width:768px){
   html,body{overflow:auto;}
   .scroll-area{padding:24px 32px 40px;}
@@ -163,113 +127,64 @@ canvas{max-height:220px;}
   .metric-grid{grid-template-columns:repeat(4,1fr);}
   .company-scroll{flex-wrap:wrap;overflow-x:visible;}
   .company-card{min-width:0;flex:1;}
-  .charts-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
-  .charts-row .chart-box{margin-bottom:0;}
   .btn{width:auto;display:inline-block;padding:10px 20px;}
   .btn-grid{grid-template-columns:repeat(3,auto);width:auto;}
   .ai-key-input{width:auto;max-width:400px;display:inline-block;margin-right:10px;vertical-align:middle;}
 }
 
-/* ── DESKTOP TABS ── */
-.desktop-tabs{
-  display:none;
-  gap:2px;background:#dde4ee;padding:6px 32px 0;
-}
-.desktop-tab{
-  padding:10px 20px;cursor:pointer;border-radius:8px 8px 0 0;
-  font-size:14px;font-weight:500;color:var(--muted);background:transparent;border:none;
-  transition:all .2s;
-}
+.desktop-tabs{display:none;gap:2px;background:#dde4ee;padding:6px 32px 0;}
+.desktop-tab{padding:10px 20px;cursor:pointer;border-radius:8px 8px 0 0;font-size:14px;font-weight:500;color:var(--muted);background:transparent;border:none;transition:all .2s;}
 .desktop-tab.active{background:var(--card);color:var(--accent);}
 .desktop-tab:hover:not(.active){background:#ccd5e0;}
-
-/* ── SWIPE HINT ── */
 .swipe-hint{text-align:center;font-size:11px;color:var(--muted);padding:4px 0 8px;}
 </style>
 </head>
 <body>
 
-<!-- HEADER -->
 <div class="header">
   <div class="header-top">
     <h1>Группа Халык · KPI</h1>
-    <div class="header-badge">9M 2025</div>
+    <div class="header-badge" id="dataBadge">Демо-данные</div>
   </div>
-  <div class="header-sub">Мониторинг дочерних компаний</div>
+  <div class="header-sub" id="headerSub">Мониторинг дочерних компаний</div>
 </div>
 
-<!-- DESKTOP TABS -->
 <div class="desktop-tabs" id="desktopTabs">
-  <button class="desktop-tab active" onclick="switchTab('overview')">Обзор группы</button>
-  <button class="desktop-tab" onclick="switchTab('monthly')">Ежемесячные</button>
+  <button class="desktop-tab active" onclick="switchTab('overview')">Обзор</button>
+  <button class="desktop-tab" onclick="switchTab('monthly')">Динамика</button>
   <button class="desktop-tab" onclick="switchTab('planfact')">План/факт</button>
-  <button class="desktop-tab" onclick="switchTab('ai')">ИИ-аналитика</button>
+  <button class="desktop-tab" onclick="switchTab('ai')">ИИ</button>
+  <button class="desktop-tab" onclick="switchTab('upload')">📂 Загрузка</button>
 </div>
 
-<!-- SCROLL AREA -->
 <div class="scroll-area" id="scrollArea">
 
-<!-- ===== PANEL: OVERVIEW ===== -->
+<!-- ===== OVERVIEW ===== -->
 <div id="panel-overview" class="panel active">
+  <div id="dataSourceBadge"></div>
   <div class="metric-grid">
-    <div class="metric-card">
-      <div class="metric-label">Активы группы</div>
-      <div class="metric-value">4 820</div>
-      <div class="metric-sub">млрд ₸ · +8.2%</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Чистая прибыль</div>
-      <div class="metric-value">187.4</div>
-      <div class="metric-sub">млрд ₸ · +12.4%</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">ROE группы</div>
-      <div class="metric-value">21.3%</div>
-      <div class="metric-sub">план 20% ✓</div>
-    </div>
-    <div class="metric-card">
-      <div class="metric-label">Дост. капитала</div>
-      <div class="metric-value">18.7%</div>
-      <div class="metric-sub">норматив 15% ✓</div>
-    </div>
+    <div class="metric-card"><div class="metric-label">Активы группы</div><div class="metric-value" id="m-assets">4 820</div><div class="metric-sub" id="m-assets-sub">млрд ₸ · +8.2%</div></div>
+    <div class="metric-card"><div class="metric-label">Чистая прибыль</div><div class="metric-value" id="m-profit">187.4</div><div class="metric-sub" id="m-profit-sub">млрд ₸ · +12.4%</div></div>
+    <div class="metric-card"><div class="metric-label">ROE группы</div><div class="metric-value" id="m-roe">21.3%</div><div class="metric-sub">план 20% ✓</div></div>
+    <div class="metric-card"><div class="metric-label">Дост. капитала</div><div class="metric-value" id="m-car">18.7%</div><div class="metric-sub">норматив 15% ✓</div></div>
   </div>
-
   <div class="section-title">Дочерние компании</div>
   <div class="swipe-hint">← прокрутите →</div>
   <div class="company-scroll" id="companyCards"></div>
-
-  <div class="chart-box">
-    <div class="chart-title">Чистая прибыль по компаниям, млрд ₸</div>
-    <canvas id="profitBar"></canvas>
-  </div>
-
-  <div class="chart-box">
-    <div class="chart-title">Выполнение плана KPI, %</div>
-    <canvas id="kpiCompletion"></canvas>
-  </div>
-
+  <div class="chart-box"><div class="chart-title">Чистая прибыль по компаниям, млрд ₸</div><canvas id="profitBar"></canvas></div>
+  <div class="chart-box"><div class="chart-title">Выполнение плана KPI, %</div><canvas id="kpiCompletion"></canvas></div>
   <div id="aiOverview"></div>
 </div>
 
-<!-- ===== PANEL: MONTHLY ===== -->
+<!-- ===== MONTHLY ===== -->
 <div id="panel-monthly" class="panel">
-  <div class="chart-box">
-    <div class="chart-title">Динамика чистой прибыли, млрд ₸</div>
-    <div class="legend" id="monthlyLegend"></div>
-    <canvas id="monthlyLine" style="max-height:240px;"></canvas>
-  </div>
-  <div class="chart-box">
-    <div class="chart-title">Динамика активов, млрд ₸</div>
-    <canvas id="assetsLine"></canvas>
-  </div>
-  <div class="chart-box">
-    <div class="chart-title">Уровень NPL, %</div>
-    <canvas id="nplLine"></canvas>
-  </div>
+  <div class="chart-box"><div class="chart-title">Динамика чистой прибыли, млрд ₸</div><div class="legend" id="monthlyLegend"></div><canvas id="monthlyLine" style="max-height:240px;"></canvas></div>
+  <div class="chart-box"><div class="chart-title">Динамика активов, млрд ₸</div><canvas id="assetsLine"></canvas></div>
+  <div class="chart-box"><div class="chart-title">Уровень NPL, %</div><canvas id="nplLine"></canvas></div>
   <div id="aiMonthly"></div>
 </div>
 
-<!-- ===== PANEL: PLAN/FACT ===== -->
+<!-- ===== PLAN/FACT ===== -->
 <div id="panel-planfact" class="panel">
   <div class="filter-bar">
     <label>Компания:</label>
@@ -282,7 +197,7 @@ canvas{max-height:220px;}
     </select>
   </div>
   <div class="legend" style="margin-bottom:12px;">
-    <div class="legend-item"><div class="legend-dot" style="background:#009A44"></div>≥100% плана</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#009A44"></div>≥100%</div>
     <div class="legend-item"><div class="legend-dot" style="background:#F5A623"></div>85–99%</div>
     <div class="legend-item"><div class="legend-dot" style="background:#e53935"></div>&lt;85%</div>
   </div>
@@ -290,7 +205,7 @@ canvas{max-height:220px;}
   <div id="aiPlanFact"></div>
 </div>
 
-<!-- ===== PANEL: AI ===== -->
+<!-- ===== AI ===== -->
 <div id="panel-ai" class="panel">
   <div class="ai-section">
     <div class="ai-title">🤖 ИИ-аналитика — Claude</div>
@@ -303,102 +218,170 @@ canvas{max-height:220px;}
       <button class="btn btn-secondary" onclick="runAI('planfact')">📊 План/факт</button>
     </div>
     <div id="aiMainResponse" class="ai-response ai-loading">Введите API-ключ и выберите тип анализа...</div>
-    <p class="ai-note">⚠️ В промт передаётся только агрегированная статистика — сырые финансовые данные не отправляются.</p>
+    <p class="ai-note">⚠️ В промт передаётся только агрегированная статистика.</p>
   </div>
+</div>
+
+<!-- ===== UPLOAD ===== -->
+<div id="panel-upload" class="panel">
+
+  <div class="upload-hero" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <div class="upload-icon">
+      <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    </div>
+    <div class="upload-title">Загрузить Excel-файл</div>
+    <div class="upload-sub">Нажмите или перетащите файл .xlsx<br>Данные обновятся на всех вкладках автоматически</div>
+    <button class="btn btn-primary" style="max-width:240px;margin:0 auto;" onclick="event.stopPropagation();document.getElementById('fileInput').click()">Выбрать файл</button>
+    <input type="file" id="fileInput" accept=".xlsx,.xls" onchange="handleFile(this.files[0])">
+  </div>
+
+  <div class="upload-status" id="uploadStatus">
+    <div class="status-row">
+      <div class="status-icon" id="statusIcon">✓</div>
+      <div><div class="status-info" id="statusInfo">Файл загружен</div><div class="status-sub" id="statusSub"></div></div>
+    </div>
+  </div>
+
+  <button class="btn btn-gold" onclick="downloadTemplate()">⬇ Скачать шаблон Excel</button>
+
+  <div class="template-box">
+    <div class="template-title">Структура шаблона</div>
+    <div class="sheet-row">
+      <div class="sheet-tag">Сводка</div>
+      <div class="sheet-desc">Активы группы, чистая прибыль, ROE, достаточность капитала — 4 метрики холдинга</div>
+    </div>
+    <div class="sheet-row">
+      <div class="sheet-tag">Компании</div>
+      <div class="sheet-desc">Прибыль 9M, ROE и % выполнения KPI по каждой из 5 дочерних компаний</div>
+    </div>
+    <div class="sheet-row">
+      <div class="sheet-tag">Ежемесячные</div>
+      <div class="sheet-desc">Чистая прибыль и активы по месяцам (12 строк × 5 компаний)</div>
+    </div>
+    <div class="sheet-row">
+      <div class="sheet-tag">KPI план-факт</div>
+      <div class="sheet-desc">9 показателей × план и факт по каждой компании</div>
+    </div>
+    <div class="sheet-row">
+      <div class="sheet-tag">NPL</div>
+      <div class="sheet-desc">Уровень NPL по месяцам для Finance и Leasing</div>
+    </div>
+  </div>
+
 </div>
 
 </div><!-- /scroll-area -->
 
-<!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="nav-item active" onclick="switchTab('overview')" id="nav-overview">
-    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-    Обзор
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>Обзор
   </button>
   <button class="nav-item" onclick="switchTab('monthly')" id="nav-monthly">
-    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-    Динамика
+    <svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>Динамика
   </button>
   <button class="nav-item" onclick="switchTab('planfact')" id="nav-planfact">
-    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-    План/факт
+    <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>План/факт
   </button>
   <button class="nav-item" onclick="switchTab('ai')" id="nav-ai">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>
-    ИИ
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>ИИ
+  </button>
+  <button class="nav-item" onclick="switchTab('upload')" id="nav-upload">
+    <svg viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Данные
   </button>
 </nav>
 
 <script>
+// ===== DEFAULT DATA =====
 const COMPANIES = ['Halyk Finance','Halyk Life','Halyk Insurance','Halyk Leasing','Halyk Global Markets'];
 const COLORS = ['#009A44','#F5A623','#00b84f','#006B2E','#a8d5b5'];
 const MONTHS = ['Янв','Фев','Мар','Апр','Май','Июн','Июл','Авг','Сен','Окт','Ноя','Дек'];
+const KPI_ROWS = ['Чистая прибыль (млрд ₸)','ROE, %','Активы (млрд ₸)','Кредитный портфель','NPL, %','GWP (млрд ₸)','Клиентская база (тыс.)','Кост/Инком, %','ROA, %'];
 
-const monthlyProfit = [
-  [5.2,5.8,6.1,6.3,6.7,7.0,7.4,7.8,8.1,8.5,8.9,9.2],
-  [1.8,2.0,2.1,2.3,2.5,2.6,2.8,3.0,3.1,3.3,3.5,3.7],
-  [2.4,2.6,2.8,3.0,3.2,3.3,3.5,3.7,3.9,4.1,4.3,4.5],
-  [1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3],
-  [0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9],
-];
-const monthlyAssets = [
-  [2100,2150,2180,2200,2230,2260,2290,2310,2340,2370,2400,2430],
-  [420,430,435,440,448,455,462,470,478,485,492,500],
-  [580,590,600,610,620,630,640,650,660,670,680,690],
-  [380,385,390,395,400,405,410,415,420,425,430,435],
-  [210,215,218,220,222,225,228,230,233,235,238,240],
-];
-const monthlyNPL = [
-  [4.2,4.1,4.0,3.9,3.8,3.7,3.6,3.5,3.4,3.3,3.2,3.1],
-  [null,null,null,null,null,null,null,null,null,null,null,null],
-  [null,null,null,null,null,null,null,null,null,null,null,null],
-  [5.1,5.0,4.9,4.8,4.7,4.6,4.5,4.4,4.3,4.2,4.1,4.0],
-  [null,null,null,null,null,null,null,null,null,null,null,null],
-];
-const companySummary = [
-  {profit:68.2,roe:23.1,kpi:97},
-  {profit:24.8,roe:19.4,kpi:91},
-  {profit:31.5,roe:22.7,kpi:104},
-  {profit:16.3,roe:17.8,kpi:88},
-  {profit:12.1,roe:21.2,kpi:112},
-];
-const KPI_ROWS = [
-  'Чистая прибыль (млрд ₸)','ROE, %','Активы (млрд ₸)',
-  'Кредитный портфель','NPL, %','GWP (млрд ₸)',
-  'Клиентская база (тыс.)','Кост/Инком, %','ROA, %',
-];
-const planFact = [
-  [[70,68.2],[25,24.8],[30,31.5],[17,16.3],[11,12.1]],
-  [[22,23.1],[18,19.4],[21,22.7],[16,17.8],[19,21.2]],
-  [[2200,2340],[480,478],[660,660],[400,415],[220,233]],
-  [[1500,1420],[null,null],[null,null],[380,395],[null,null]],
-  [[3.5,3.4],[null,null],[null,null],[4.5,4.3],[null,null]],
-  [[null,null],[null,null],[28,31.5],[null,null],[null,null]],
-  [[520,498],[180,195],[310,322],[145,138],[88,96]],
-  [[45,43],[38,40],[35,33],[50,51],[42,40]],
-  [[1.8,1.72],[1.2,1.19],[1.5,1.53],[1.1,1.05],[1.6,1.74]],
-];
+let DATA = {
+  holding: {assets:'4 820', assetsGrowth:'+8.2%', profit:'187.4', profitGrowth:'+12.4%', roe:'21.3%', car:'18.7%'},
+  companies: [
+    {profit:68.2,roe:23.1,kpi:97},{profit:24.8,roe:19.4,kpi:91},
+    {profit:31.5,roe:22.7,kpi:104},{profit:16.3,roe:17.8,kpi:88},{profit:12.1,roe:21.2,kpi:112}
+  ],
+  monthlyProfit: [
+    [5.2,5.8,6.1,6.3,6.7,7.0,7.4,7.8,8.1,8.5,8.9,9.2],
+    [1.8,2.0,2.1,2.3,2.5,2.6,2.8,3.0,3.1,3.3,3.5,3.7],
+    [2.4,2.6,2.8,3.0,3.2,3.3,3.5,3.7,3.9,4.1,4.3,4.5],
+    [1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9,2.0,2.1,2.2,2.3],
+    [0.8,0.9,1.0,1.1,1.2,1.3,1.4,1.5,1.6,1.7,1.8,1.9],
+  ],
+  monthlyAssets: [
+    [2100,2150,2180,2200,2230,2260,2290,2310,2340,2370,2400,2430],
+    [420,430,435,440,448,455,462,470,478,485,492,500],
+    [580,590,600,610,620,630,640,650,660,670,680,690],
+    [380,385,390,395,400,405,410,415,420,425,430,435],
+    [210,215,218,220,222,225,228,230,233,235,238,240],
+  ],
+  monthlyNPL: [
+    [4.2,4.1,4.0,3.9,3.8,3.7,3.6,3.5,3.4,3.3,3.2,3.1],
+    [null,null,null,null,null,null,null,null,null,null,null,null],
+    [null,null,null,null,null,null,null,null,null,null,null,null],
+    [5.1,5.0,4.9,4.8,4.7,4.6,4.5,4.4,4.3,4.2,4.1,4.0],
+    [null,null,null,null,null,null,null,null,null,null,null,null],
+  ],
+  planFact: [
+    [[70,68.2],[25,24.8],[30,31.5],[17,16.3],[11,12.1]],
+    [[22,23.1],[18,19.4],[21,22.7],[16,17.8],[19,21.2]],
+    [[2200,2340],[480,478],[660,660],[400,415],[220,233]],
+    [[1500,1420],[null,null],[null,null],[380,395],[null,null]],
+    [[3.5,3.4],[null,null],[null,null],[4.5,4.3],[null,null]],
+    [[null,null],[null,null],[28,31.5],[null,null],[null,null]],
+    [[520,498],[180,195],[310,322],[145,138],[88,96]],
+    [[45,43],[38,40],[35,33],[50,51],[42,40]],
+    [[1.8,1.72],[1.2,1.19],[1.5,1.53],[1.1,1.05],[1.6,1.74]],
+  ],
+  fromFile: false,
+  fileName: ''
+};
 
+// Chart instances for re-render
+const charts = {};
+
+// ===== HELPERS =====
 function kpiPct(plan,fact){if(!plan||plan===null)return null;return Math.round((fact/plan)*100);}
 function badgeClass(p){if(p===null)return '';if(p>=100)return 'badge-green';if(p>=85)return 'badge-yellow';return 'badge-red';}
 function colorForPct(p){if(p>=100)return '#009A44';if(p>=85)return '#F5A623';return '#e53935';}
+function destroyChart(id){if(charts[id]){charts[id].destroy();delete charts[id];}}
+function n(v){return v===null||v===undefined?null:Number(v)||0;}
 
-function switchTab(tab) {
-  const ids = ['overview','monthly','planfact','ai'];
+// ===== TABS =====
+function switchTab(tab){
+  const ids=['overview','monthly','planfact','ai','upload'];
   document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
   document.getElementById('panel-'+tab).classList.add('active');
-  document.querySelectorAll('.nav-item').forEach((n,i)=>n.classList.toggle('active',ids[i]===tab));
-  document.querySelectorAll('.desktop-tab').forEach((t,i)=>t.classList.toggle('active',ids[i]===tab));
+  document.querySelectorAll('.nav-item').forEach((el,i)=>el.classList.toggle('active',ids[i]===tab));
+  document.querySelectorAll('.desktop-tab').forEach((el,i)=>el.classList.toggle('active',ids[i]===tab));
   document.getElementById('scrollArea').scrollTop=0;
   if(tab==='monthly'&&!window._monthlyInit){initMonthly();window._monthlyInit=true;}
 }
 
-function initOverview(){
+// ===== OVERVIEW =====
+function renderOverview(){
+  const h=DATA.holding;
+  document.getElementById('m-assets').textContent=h.assets;
+  document.getElementById('m-assets-sub').textContent='млрд ₸ · '+h.assetsGrowth;
+  document.getElementById('m-profit').textContent=h.profit;
+  document.getElementById('m-profit-sub').textContent='млрд ₸ · '+h.profitGrowth;
+  document.getElementById('m-roe').textContent=h.roe;
+  document.getElementById('m-car').textContent=h.car;
+
+  const b=document.getElementById('dataSourceBadge');
+  b.innerHTML=DATA.fromFile
+    ?`<div class="data-source-badge">📂 Данные из файла: ${DATA.fileName}</div>`
+    :`<div class="data-source-badge" style="background:#fdf0d5;color:#8a5a00;">⚠️ Демо-данные — загрузите Excel на вкладке «Данные»</div>`;
+  document.getElementById('dataBadge').textContent=DATA.fromFile?DATA.fileName:'Демо-данные';
+
   const wrap=document.getElementById('companyCards');
-  COMPANIES.forEach((name,i)=>{
-    const d=companySummary[i];const pct=d.kpi;const color=colorForPct(pct);
+  wrap.innerHTML='';
+  DATA.companies.forEach((d,i)=>{
+    const pct=d.kpi,color=colorForPct(pct);
     wrap.innerHTML+=`<div class="company-card">
-      <div class="co-name">${name}</div>
+      <div class="co-name">${COMPANIES[i]}</div>
       <div class="co-profit" style="color:${COLORS[i]}">${d.profit} млрд</div>
       <div class="co-roe">ROE: ${d.roe}%</div>
       <div class="progress-bar"><div class="progress-fill" style="width:${Math.min(pct,120)}%;background:${color}"></div></div>
@@ -406,49 +389,68 @@ function initOverview(){
     </div>`;
   });
 
-  const chartOpts={plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{font:{size:10}}}}};
-  new Chart(document.getElementById('profitBar'),{
+  destroyChart('profitBar');
+  charts['profitBar']=new Chart(document.getElementById('profitBar'),{
     type:'bar',
-    data:{labels:COMPANIES.map(c=>c.replace('Halyk ','')),datasets:[{data:companySummary.map(d=>d.profit),backgroundColor:COLORS,borderRadius:5}]},
-    options:{...chartOpts,scales:{y:{beginAtZero:true,title:{display:true,text:'млрд ₸',font:{size:10}}}}}
+    data:{labels:COMPANIES.map(c=>c.replace('Halyk ','')),datasets:[{data:DATA.companies.map(d=>d.profit),backgroundColor:COLORS,borderRadius:5}]},
+    options:{plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,title:{display:true,text:'млрд ₸',font:{size:10}},ticks:{font:{size:10}}}}}
   });
-  new Chart(document.getElementById('kpiCompletion'),{
+
+  destroyChart('kpiCompletion');
+  charts['kpiCompletion']=new Chart(document.getElementById('kpiCompletion'),{
     type:'bar',
-    data:{labels:COMPANIES.map(c=>c.replace('Halyk ','')),datasets:[{data:companySummary.map(d=>d.kpi),backgroundColor:companySummary.map(d=>colorForPct(d.kpi)),borderRadius:5}]},
+    data:{labels:COMPANIES.map(c=>c.replace('Halyk ','')),datasets:[{data:DATA.companies.map(d=>d.kpi),backgroundColor:DATA.companies.map(d=>colorForPct(d.kpi)),borderRadius:5}]},
     options:{plugins:{legend:{display:false}},scales:{y:{min:70,max:125,ticks:{callback:v=>v+'%',font:{size:10}}}}}
   });
+
   injectAI('aiOverview','overview');
 }
 
+// ===== MONTHLY =====
 function initMonthly(){
   const lg=document.getElementById('monthlyLegend');
+  lg.innerHTML='';
   COMPANIES.forEach((c,i)=>{
     lg.innerHTML+=`<div class="legend-item"><div class="legend-dot" style="background:${COLORS[i]}"></div>${c.replace('Halyk ','')}</div>`;
   });
-  new Chart(document.getElementById('monthlyLine'),{
+
+  destroyChart('monthlyLine');
+  charts['monthlyLine']=new Chart(document.getElementById('monthlyLine'),{
     type:'line',
-    data:{labels:MONTHS,datasets:COMPANIES.map((c,i)=>({label:c,data:monthlyProfit[i],borderColor:COLORS[i],tension:.35,pointRadius:2,fill:false}))},
+    data:{labels:MONTHS,datasets:COMPANIES.map((c,i)=>({label:c,data:DATA.monthlyProfit[i],borderColor:COLORS[i],tension:.35,pointRadius:2,fill:false}))},
     options:{plugins:{legend:{display:false}},scales:{y:{ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}
   });
-  new Chart(document.getElementById('assetsLine'),{
+
+  destroyChart('assetsLine');
+  charts['assetsLine']=new Chart(document.getElementById('assetsLine'),{
     type:'line',
-    data:{labels:MONTHS,datasets:[0,2,3].map(i=>({label:COMPANIES[i].replace('Halyk ',''),data:monthlyAssets[i],borderColor:COLORS[i],tension:.35,pointRadius:2,fill:false}))},
+    data:{labels:MONTHS,datasets:[0,2,3].map(i=>({label:COMPANIES[i].replace('Halyk ',''),data:DATA.monthlyAssets[i],borderColor:COLORS[i],tension:.35,pointRadius:2,fill:false}))},
     options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8,font:{size:10}}}},scales:{y:{ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}
   });
-  new Chart(document.getElementById('nplLine'),{
+
+  destroyChart('nplLine');
+  charts['nplLine']=new Chart(document.getElementById('nplLine'),{
     type:'line',
-    data:{labels:MONTHS,datasets:[0,3].map(i=>({label:COMPANIES[i].replace('Halyk ',''),data:monthlyNPL[i],borderColor:COLORS[i],tension:.35,pointRadius:2,fill:false}))},
+    data:{labels:MONTHS,datasets:[0,3].map(i=>({label:COMPANIES[i].replace('Halyk ',''),data:DATA.monthlyNPL[i],borderColor:COLORS[i],tension:.35,pointRadius:2,fill:false}))},
     options:{plugins:{legend:{position:'bottom',labels:{boxWidth:8,font:{size:10}}}},scales:{y:{ticks:{font:{size:10}}},x:{ticks:{font:{size:10}}}}}
   });
+
   injectAI('aiMonthly','monthly');
 }
 
+function refreshMonthly(){
+  window._monthlyInit=false;
+  ['monthlyLine','assetsLine','nplLine'].forEach(destroyChart);
+  document.getElementById('monthlyLegend').innerHTML='';
+}
+
+// ===== PLAN/FACT =====
 function renderPlanFact(){
   const ci=parseInt(document.getElementById('pfFilter').value);
   let header=`<tr><th>Показатель</th><th>План</th><th>Факт</th><th>%</th></tr>`;
   let rows='';
   KPI_ROWS.forEach((row,ri)=>{
-    const pair=planFact[ri][ci];
+    const pair=DATA.planFact[ri][ci];
     if(!pair||pair[0]===null){
       rows+=`<tr><td>${row}</td><td>—</td><td>—</td><td>—</td></tr>`;
     } else {
@@ -460,6 +462,7 @@ function renderPlanFact(){
   if(!document.getElementById('aiPlanFact').dataset.injected) injectAI('aiPlanFact','planfact');
 }
 
+// ===== AI =====
 function injectAI(cid,ctx){
   const el=document.getElementById(cid);
   if(!el||el.dataset.injected)return;
@@ -475,31 +478,27 @@ function injectAI(cid,ctx){
 }
 
 function buildPrompt(ctx){
-  const s=COMPANIES.map((c,i)=>{const d=companySummary[i];return `${c}: прибыль 9M ${d.profit} млрд ₸, ROE ${d.roe}%, KPI ${d.kpi}%`;}).join('; ');
-  const ok=companySummary.filter(d=>d.kpi>=100).length;
-  const warn=companySummary.filter(d=>d.kpi>=85&&d.kpi<100).length;
-  const bad=companySummary.filter(d=>d.kpi<85).length;
+  const s=COMPANIES.map((c,i)=>{const d=DATA.companies[i];return `${c}: прибыль 9M ${d.profit} млрд ₸, ROE ${d.roe}%, KPI ${d.kpi}%`;}).join('; ');
+  const ok=DATA.companies.filter(d=>d.kpi>=100).length;
+  const warn=DATA.companies.filter(d=>d.kpi>=85&&d.kpi<100).length;
+  const bad=DATA.companies.filter(d=>d.kpi<85).length;
+  const h=DATA.holding;
   const map={
-    overview:`Анализируй Группу Халык (9M 2025): ${s}. Активы: 4820 млрд, прибыль: 187.4 млрд, ROE: 21.3%, CAR: 18.7%. KPI: ${ok} ≥100%, ${warn} 85-99%, ${bad} <85%. Дай: (1) оценку группы, (2) топ-3 риска, (3) топ-3 рекомендации.`,
-    monthly:`Анализируй динамику дочерних компаний Группы Халык (2025): ${s}. Рост прибыли г/г: +12.4%. NPL Finance: 4.2%→3.4%, NPL Leasing: 5.1%→4.3%. Дай: (1) оценку динамики, (2) тренды, (3) рекомендации.`,
-    planfact:`Анализируй план/факт KPI Группы Халык (9M 2025): ${s}. Insurance перевыполняет GWP (+12%). Global Markets перевыполняет ROE (21.2% vs план 19%). Leasing отстаёт по кредитному портфелю (88%). Дай: (1) отклонения, (2) причины, (3) рекомендации.`,
-    risks:`Оцени риски Группы Халык (9M 2025): ${s}. Активы 4820 млрд, CAR 18.7%, NPL Finance 3.4%, NPL Leasing 4.3%. Детальный анализ рисков (кредитный, рыночный, операционный) и меры митигации.`,
-    recommendations:`Стратегические рекомендации для Группы Халык (9M 2025): ${s}. Топ-5 конкретных рекомендаций с обоснованием.`,
-    dynamics:`Проанализируй динамику Группы Халык (9M 2025): ${s}. Рост прибыли +12.4% г/г, активы +8.2%. Оцени качество роста и прогноз на год.`,
+    overview:`Анализируй Группу Халык: ${s}. Активы: ${h.assets} млрд, прибыль: ${h.profit} млрд, ROE: ${h.roe}, CAR: ${h.car}. KPI: ${ok} ≥100%, ${warn} 85-99%, ${bad} <85%. Дай: (1) оценку группы, (2) топ-3 риска, (3) топ-3 рекомендации.`,
+    monthly:`Анализируй динамику Группы Халык: ${s}. Дай: (1) оценку динамики, (2) тренды, (3) рекомендации.`,
+    planfact:`Анализируй план/факт KPI Группы Халык: ${s}. Дай: (1) анализ отклонений, (2) причины, (3) рекомендации.`,
+    risks:`Оцени риски Группы Халык: ${s}. Активы ${h.assets} млрд, CAR ${h.car}. Детальный анализ рисков и меры митигации.`,
+    recommendations:`Стратегические рекомендации для Группы Халык: ${s}. Топ-5 рекомендаций с обоснованием.`,
+    dynamics:`Проанализируй динамику Группы Халык: ${s}. Рост прибыли ${h.profitGrowth} г/г. Оцени качество роста и прогноз.`,
   };
-  return `Ты финансовый аналитик по Казахстану. ${map[ctx]||map.overview} Отвечай на русском языке, конкретно, используй данные. Максимум 300 слов.`;
+  return `Ты финансовый аналитик по Казахстану. ${map[ctx]||map.overview} Отвечай на русском языке, конкретно. Максимум 300 слов.`;
 }
 
 async function callClaude(key,prompt){
-  const r=await fetch('https://api.anthropic.com/v1/messages',{
-    method:'POST',
-    headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
-    body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:700,messages:[{role:'user',content:prompt}]}),
-  });
+  const r=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},body:JSON.stringify({model:'claude-sonnet-4-6',max_tokens:700,messages:[{role:'user',content:prompt}]})});
   if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.error?.message||`HTTP ${r.status}`);}
   const d=await r.json();return d.content?.[0]?.text||'(пустой ответ)';
 }
-
 async function runAIContext(ctx,cid){
   const key=document.getElementById('key_'+cid)?.value?.trim();
   const el=document.getElementById('resp_'+cid);
@@ -508,7 +507,6 @@ async function runAIContext(ctx,cid){
   try{el.className='ai-response';el.textContent=await callClaude(key,buildPrompt(ctx));}
   catch(e){el.className='ai-response';el.textContent='❌ Ошибка: '+e.message;}
 }
-
 async function runAI(ctx){
   const key=document.getElementById('apiKeyMain')?.value?.trim();
   const el=document.getElementById('aiMainResponse');
@@ -517,13 +515,175 @@ async function runAI(ctx){
   try{el.className='ai-response';el.textContent=await callClaude(key,buildPrompt(ctx));}
   catch(e){el.className='ai-response';el.textContent='❌ Ошибка: '+e.message;}
 }
-
 async function runFullAI(){await runAI('overview');}
 
-// Show desktop tabs on wide screens
-if(window.innerWidth>=768)document.getElementById('desktopTabs').style.display='flex';
+// ===== EXCEL UPLOAD =====
+const dropZone=document.getElementById('dropZone');
+dropZone.addEventListener('dragover',e=>{e.preventDefault();dropZone.classList.add('drag-over');});
+dropZone.addEventListener('dragleave',()=>dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop',e=>{e.preventDefault();dropZone.classList.remove('drag-over');const f=e.dataTransfer.files[0];if(f)handleFile(f);});
 
-initOverview();
+function handleFile(file){
+  if(!file)return;
+  if(!file.name.match(/\.xlsx?$/i)){showStatus(false,'Неверный формат','Загрузите файл .xlsx или .xls');return;}
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const wb=XLSX.read(e.target.result,{type:'array'});
+      parseWorkbook(wb,file.name);
+    } catch(err){
+      showStatus(false,'Ошибка чтения файла',err.message);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function getSheet(wb,name){return wb.Sheets[name]||wb.Sheets[wb.SheetNames.find(s=>s.toLowerCase().includes(name.toLowerCase()))];}
+function sheetToArr(ws){return ws?XLSX.utils.sheet_to_json(ws,{header:1,defval:null}):[];}
+
+function parseWorkbook(wb,fileName){
+  const newData={...DATA,fromFile:true,fileName};
+  let sheetsFound=[];
+
+  // Sheet: Сводка (holding metrics)
+  const wsSummary=getSheet(wb,'Сводка')||getSheet(wb,'Холдинг');
+  if(wsSummary){
+    sheetsFound.push('Сводка');
+    const rows=sheetToArr(wsSummary);
+    const map={};
+    rows.forEach(r=>{if(r[0]&&r[1]!=null)map[String(r[0]).trim().toLowerCase()]=r[1];});
+    newData.holding={
+      assets: n(map['активы группы']||map['assets']||DATA.holding.assets),
+      assetsGrowth: map['активы рост']||map['assets growth']||DATA.holding.assetsGrowth,
+      profit: n(map['чистая прибыль']||map['net profit']||DATA.holding.profit),
+      profitGrowth: map['прибыль рост']||map['profit growth']||DATA.holding.profitGrowth,
+      roe: map['roe группы']||map['roe']||DATA.holding.roe,
+      car: map['достаточность капитала']||map['car']||DATA.holding.car,
+    };
+  }
+
+  // Sheet: Компании
+  const wsComp=getSheet(wb,'Компании')||getSheet(wb,'Companies');
+  if(wsComp){
+    sheetsFound.push('Компании');
+    const rows=sheetToArr(wsComp).slice(1); // skip header
+    newData.companies=rows.slice(0,5).map((r,i)=>({
+      profit:n(r[1])??DATA.companies[i].profit,
+      roe:n(r[2])??DATA.companies[i].roe,
+      kpi:n(r[3])??DATA.companies[i].kpi,
+    }));
+  }
+
+  // Sheet: Ежемесячные
+  const wsMonthly=getSheet(wb,'Ежемесячные')||getSheet(wb,'Monthly');
+  if(wsMonthly){
+    sheetsFound.push('Ежемесячные');
+    const rows=sheetToArr(wsMonthly).slice(1,13); // 12 months
+    const profit=[[],[],[],[], []];
+    const assets=[[],[],[],[],[]];
+    rows.forEach(r=>{
+      for(let i=0;i<5;i++){profit[i].push(n(r[1+i]));assets[i].push(n(r[6+i]));}
+    });
+    newData.monthlyProfit=profit;
+    newData.monthlyAssets=assets;
+  }
+
+  // Sheet: KPI план-факт
+  const wsKPI=getSheet(wb,'KPI план-факт')||getSheet(wb,'KPI')||getSheet(wb,'План-факт');
+  if(wsKPI){
+    sheetsFound.push('KPI план-факт');
+    const rows=sheetToArr(wsKPI).slice(1,10); // 9 KPI rows
+    newData.planFact=rows.map((r,ri)=>{
+      return Array.from({length:5},(_,ci)=>{
+        const plan=r[1+ci*2], fact=r[2+ci*2];
+        return (plan==null&&fact==null)?[null,null]:[n(plan),n(fact)];
+      });
+    });
+    if(newData.planFact.length<9) newData.planFact=[...newData.planFact,...DATA.planFact.slice(newData.planFact.length)];
+  }
+
+  // Sheet: NPL
+  const wsNPL=getSheet(wb,'NPL');
+  if(wsNPL){
+    sheetsFound.push('NPL');
+    const rows=sheetToArr(wsNPL).slice(1,13);
+    newData.monthlyNPL=[[],[],[], [null,null,null,null,null,null,null,null,null,null,null,null],[],[]];
+    newData.monthlyNPL[0]=rows.map(r=>r[1]!=null?n(r[1]):null);
+    newData.monthlyNPL[3]=rows.map(r=>r[2]!=null?n(r[2]):null);
+  }
+
+  if(sheetsFound.length===0){
+    showStatus(false,'Листы не распознаны','Убедитесь, что файл создан по шаблону Халык');
+    return;
+  }
+
+  DATA=newData;
+  refreshAll();
+  showStatus(true,`Загружено: ${fileName}`,`Обновлены листы: ${sheetsFound.join(', ')}`);
+  switchTab('overview');
+}
+
+function refreshAll(){
+  renderOverview();
+  refreshMonthly();
+  renderPlanFact();
+  // reset AI blocks
+  ['aiOverview','aiMonthly','aiPlanFact'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(el){el.innerHTML='';delete el.dataset.injected;}
+  });
+}
+
+function showStatus(ok,info,sub){
+  const wrap=document.getElementById('uploadStatus');
+  const icon=document.getElementById('statusIcon');
+  document.getElementById('statusInfo').textContent=info;
+  document.getElementById('statusSub').textContent=sub||'';
+  icon.textContent=ok?'✓':'✗';
+  icon.className='status-icon '+(ok?'status-ok':'status-err');
+  wrap.classList.add('visible');
+}
+
+// ===== TEMPLATE DOWNLOAD =====
+function downloadTemplate(){
+  const wb=XLSX.utils.book_new();
+
+  // Sheet 1: Сводка
+  const s1=[
+    ['Метрика','Значение','Рост г/г'],
+    ['Активы группы',4820,'+8.2%'],
+    ['Чистая прибыль',187.4,'+12.4%'],
+    ['ROE группы','21.3%',''],
+    ['Достаточность капитала','18.7%',''],
+  ];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s1),'Сводка');
+
+  // Sheet 2: Компании
+  const s2=[['Компания','Прибыль 9M (млрд ₸)','ROE (%)','KPI выполнение (%)'],
+    ...COMPANIES.map((c,i)=>[c,DATA.companies[i].profit,DATA.companies[i].roe,DATA.companies[i].kpi])];
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet(s2),'Компании');
+
+  // Sheet 3: Ежемесячные
+  const s3hdr=['Месяц',...COMPANIES.map(c=>c+' Прибыль'),...COMPANIES.map(c=>c+' Активы')];
+  const s3rows=MONTHS.map((m,mi)=>[m,...DATA.monthlyProfit.map(arr=>arr[mi]),...DATA.monthlyAssets.map(arr=>arr[mi])]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([s3hdr,...s3rows]),'Ежемесячные');
+
+  // Sheet 4: KPI план-факт
+  const s4hdr=['Показатель',...COMPANIES.flatMap(c=>[c+' план',c+' факт'])];
+  const s4rows=KPI_ROWS.map((row,ri)=>[row,...DATA.planFact[ri].flatMap(pair=>pair[0]===null?['','']:pair)]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([s4hdr,...s4rows]),'KPI план-факт');
+
+  // Sheet 5: NPL
+  const s5hdr=['Месяц','Finance NPL (%)','Leasing NPL (%)'];
+  const s5rows=MONTHS.map((m,mi)=>[m,DATA.monthlyNPL[0][mi],DATA.monthlyNPL[3][mi]]);
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([s5hdr,...s5rows]),'NPL');
+
+  XLSX.writeFile(wb,'Halyk_KPI_Template.xlsx');
+}
+
+// ===== INIT =====
+if(window.innerWidth>=768)document.getElementById('desktopTabs').style.display='flex';
+renderOverview();
 renderPlanFact();
 </script>
 </body>
