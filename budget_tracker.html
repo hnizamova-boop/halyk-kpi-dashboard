@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Бюджетный трекер — Халык</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<style>
+:root{
+  --accent:#009A44;--accent2:#00b84f;--gold:#F5A623;
+  --red:#e53935;--blue:#1565C0;
+  --bg:#f3faf5;--card:#ffffff;--border:#d0eada;
+  --text:#1a2e1f;--muted:#5a7a63;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{height:100%;overflow:hidden;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column;}
+
+.header{background:linear-gradient(135deg,#006B2E 0%,#009A44 60%,#00b84f 100%);color:#fff;padding:14px 16px 12px;padding-top:calc(14px + env(safe-area-inset-top));flex-shrink:0;position:relative;z-index:10;border-bottom:3px solid var(--gold);}
+.header h1{font-size:18px;font-weight:700;letter-spacing:.5px;}
+.header p{font-size:12px;opacity:.85;margin-top:2px;}
+
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);flex-shrink:0;}
+.tab{flex:1;padding:11px 4px;text-align:center;font-size:12px;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;transition:color .2s;}
+.tab.active{color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-2px;}
+
+.pages{flex:1;overflow:hidden;position:relative;}
+.page{position:absolute;inset:0;overflow-y:auto;padding:12px;display:none;flex-direction:column;gap:12px;}
+.page.active{display:flex;}
+
+/* Cards */
+.card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,154,68,.08);border:1px solid var(--border);}
+.card-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
+
+/* Summary row */
+.summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+.sum-box{background:var(--card);border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 6px rgba(0,154,68,.07);border:1px solid var(--border);}
+.sum-box .label{font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;}
+.sum-box .value{font-size:16px;font-weight:800;}
+.sum-box.income .value{color:var(--accent);}
+.sum-box.expense .value{color:var(--red);}
+.sum-box.balance .value{color:var(--blue);}
+
+/* Form */
+.form-row{display:flex;gap:8px;flex-wrap:wrap;}
+.form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px;}
+.form-group label{font-size:11px;font-weight:600;color:var(--muted);}
+.form-group input,.form-group select{border:1.5px solid var(--border);border-radius:8px;padding:9px 10px;font-size:14px;color:var(--text);background:#fff;outline:none;width:100%;}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+.btn{border:none;border-radius:10px;padding:11px 20px;font-size:14px;font-weight:700;cursor:pointer;transition:opacity .15s;}
+.btn-add{background:var(--accent);color:#fff;width:100%;}
+.btn-add:active{opacity:.8;}
+.btn-del{background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:0 4px;}
+
+/* Transaction list */
+.tx-list{display:flex;flex-direction:column;gap:6px;}
+.tx-item{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:10px;padding:10px 12px;border:1px solid var(--border);}
+.tx-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
+.tx-icon.income{background:#e8f5e9;}
+.tx-icon.expense{background:#ffebee;}
+.tx-info{flex:1;min-width:0;}
+.tx-desc{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tx-cat{font-size:11px;color:var(--muted);}
+.tx-amount{font-size:15px;font-weight:800;flex-shrink:0;}
+.tx-amount.income{color:var(--accent);}
+.tx-amount.expense{color:var(--red);}
+.tx-date{font-size:10px;color:var(--muted);flex-shrink:0;}
+
+/* Budget limits */
+.budget-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.budget-row .cat-name{flex:1;font-size:13px;font-weight:600;}
+.progress-wrap{flex:2;}
+.progress-bar{height:8px;background:#e8f5e9;border-radius:4px;overflow:hidden;}
+.progress-fill{height:100%;border-radius:4px;background:var(--accent);transition:width .4s;}
+.progress-fill.warn{background:var(--gold);}
+.progress-fill.over{background:var(--red);}
+.budget-nums{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap;}
+
+/* Chart container */
+.chart-wrap{position:relative;height:220px;}
+
+/* Month selector */
+.month-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+.month-nav{background:none;border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:16px;color:var(--accent);}
+.month-label{font-size:14px;font-weight:700;}
+
+/* Type toggle */
+.type-toggle{display:flex;gap:6px;margin-bottom:2px;}
+.type-btn{flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);}
+.type-btn.active.income{background:#e8f5e9;color:var(--accent);border-color:var(--accent);}
+.type-btn.active.expense{background:#ffebee;color:var(--red);border-color:var(--red);}
+
+.empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 0;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>💰 Бюджетный трекер</h1>
+  <p id="headerMonth">загрузка...</p>
+</div>
+
+<div class="tabs">
+  <button class="tab active" onclick="switchTab(0)">Главная</button>
+  <button class="tab" onclick="switchTab(1)">Добавить</button>
+  <button class="tab" onclick="switchTab(2)">История</button>
+  <button class="tab" onclick="switchTab(3)">Аналитика</button>
+</div>
+
+<div class="pages">
+
+  <!-- PAGE 0: Главная -->
+  <div class="page active" id="page0">
+    <div class="month-row">
+      <button class="month-nav" onclick="changeMonth(-1)">‹</button>
+      <span class="month-label" id="monthLabel">—</span>
+      <button class="month-nav" onclick="changeMonth(1)">›</button>
+    </div>
+
+    <div class="summary">
+      <div class="sum-box income">
+        <div class="label">Доходы</div>
+        <div class="value" id="sumIncome">0</div>
+      </div>
+      <div class="sum-box expense">
+        <div class="label">Расходы</div>
+        <div class="value" id="sumExpense">0</div>
+      </div>
+      <div class="sum-box balance">
+        <div class="label">Баланс</div>
+        <div class="value" id="sumBalance">0</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Расходы по категориям</div>
+      <div id="budgetBars"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Последние операции</div>
+      <div class="tx-list" id="recentList"></div>
+    </div>
+  </div>
+
+  <!-- PAGE 1: Добавить -->
+  <div class="page" id="page1">
+    <div class="card">
+      <div class="card-title">Новая операция</div>
+      <div style="display:flex;flex-direction:column;gap:12px;">
+        <div class="type-toggle">
+          <button class="type-btn income" id="btnIncome" onclick="setType('income')">+ Доход</button>
+          <button class="type-btn active expense" id="btnExpense" onclick="setType('expense')">− Расход</button>
+        </div>
+        <div class="form-group">
+          <label>Описание</label>
+          <input type="text" id="fDesc" placeholder="Зарплата, еда, такси...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Сумма (₸)</label>
+            <input type="number" id="fAmount" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Дата</label>
+            <input type="date" id="fDate">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Категория</label>
+          <select id="fCat"></select>
+        </div>
+        <button class="btn btn-add" onclick="addTransaction()">Добавить</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Лимиты по категориям расходов</div>
+      <div style="display:flex;flex-direction:column;gap:8px;" id="limitsList"></div>
+    </div>
+  </div>
+
+  <!-- PAGE 2: История -->
+  <div class="page" id="page2">
+    <div class="card" style="padding:10px 14px;">
+      <input type="text" id="searchInput" placeholder="🔍  Поиск по описанию..." style="border:1.5px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;width:100%;outline:none;" oninput="renderHistory()">
+    </div>
+    <div class="tx-list" id="historyList"></div>
+  </div>
+
+  <!-- PAGE 3: Аналитика -->
+  <div class="page" id="page3">
+    <div class="card">
+      <div class="card-title">Доходы vs Расходы (6 месяцев)</div>
+      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Структура расходов</div>
+      <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Динамика баланса</div>
+      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ─── Data ───────────────────────────────────────────────────────────────────
+const CATS_EXPENSE = ['Еда','Транспорт','Жильё','Здоровье','Одежда','Развлечения','Связь','Образование','Прочее'];
+const CATS_INCOME  = ['Зарплата','Фриланс','Инвестиции','Подарок','Прочее'];
+const CAT_ICONS    = {'Еда':'🍔','Транспорт':'🚗','Жильё':'🏠','Здоровье':'💊','Одежда':'👗','Развлечения':'🎭','Связь':'📱','Образование':'📚','Зарплата':'💼','Фриланс':'💻','Инвестиции':'📈','Подарок':'🎁','Прочее':'📦'};
+
+let txs   = JSON.parse(localStorage.getItem('bt_txs')   || '[]');
+let limits= JSON.parse(localStorage.getItem('bt_limits') || '{}');
+let currentType = 'expense';
+let viewYear, viewMonth; // 0-based month
+
+const now = new Date();
+viewYear  = now.getFullYear();
+viewMonth = now.getMonth();
+
+// ─── Utils ──────────────────────────────────────────────────────────────────
+function save(){
+  localStorage.setItem('bt_txs',   JSON.stringify(txs));
+  localStorage.setItem('bt_limits',JSON.stringify(limits));
+}
+function fmt(n){return Number(n).toLocaleString('ru-KZ');}
+function monthKey(y,m){return `${y}-${String(m+1).padStart(2,'0')}`;}
+function monthName(y,m){
+  return new Date(y,m,1).toLocaleString('ru',{month:'long',year:'numeric'});
+}
+function txsForMonth(y,m){
+  const k=monthKey(y,m);
+  return txs.filter(t=>t.date.startsWith(k));
+}
+
+// ─── Tab switching ───────────────────────────────────────────────────────────
+function switchTab(i){
+  document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
+  document.querySelectorAll('.page').forEach((p,j)=>p.classList.toggle('active',i===j));
+  if(i===0) renderHome();
+  if(i===1) renderAddPage();
+  if(i===2) renderHistory();
+  if(i===3) renderCharts();
+}
+
+// ─── Month navigation ────────────────────────────────────────────────────────
+function changeMonth(d){
+  viewMonth+=d;
+  if(viewMonth>11){viewMonth=0;viewYear++;}
+  if(viewMonth<0) {viewMonth=11;viewYear--;}
+  renderHome();
+}
+
+// ─── Type toggle ─────────────────────────────────────────────────────────────
+function setType(t){
+  currentType=t;
+  document.getElementById('btnIncome').className ='type-btn'+(t==='income'?' active income':'');
+  document.getElementById('btnExpense').className='type-btn'+(t==='expense'?' active expense':'');
+  updateCatSelect();
+}
+function updateCatSelect(){
+  const sel=document.getElementById('fCat');
+  const cats=currentType==='income'?CATS_INCOME:CATS_EXPENSE;
+  sel.innerHTML=cats.map(c=>`<option>${c}</option>`).join('');
+}
+
+// ─── Add transaction ─────────────────────────────────────────────────────────
+function addTransaction(){
+  const desc  =document.getElementById('fDesc').value.trim();
+  const amount=parseFloat(document.getElementById('fAmount').value);
+  const date  =document.getElementById('fDate').value;
+  const cat   =document.getElementById('fCat').value;
+  if(!desc||!amount||!date){alert('Заполните все поля');return;}
+  txs.unshift({id:Date.now(),type:currentType,desc,amount,date,cat});
+  save();
+  document.getElementById('fDesc').value='';
+  document.getElementById('fAmount').value='';
+  alert('✅ Операция добавлена!');
+  renderHome();
+}
+
+// ─── Home ────────────────────────────────────────────────────────────────────
+function renderHome(){
+  const mn=monthName(viewYear,viewMonth);
+  document.getElementById('monthLabel').textContent=mn;
+  document.getElementById('headerMonth').textContent=mn;
+
+  const list=txsForMonth(viewYear,viewMonth);
+  const income =list.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const expense=list.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  const balance=income-expense;
+
+  document.getElementById('sumIncome').textContent =fmt(income)+'₸';
+  document.getElementById('sumExpense').textContent=fmt(expense)+'₸';
+  document.getElementById('sumBalance').textContent=(balance>=0?'+':'')+fmt(balance)+'₸';
+  document.getElementById('sumBalance').style.color=balance>=0?'var(--blue)':'var(--red)';
+
+  // Budget bars
+  const bars=document.getElementById('budgetBars');
+  const expByCat={};
+  list.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.cat]=(expByCat[t.cat]||0)+t.amount;});
+  const cats=Object.keys(expByCat);
+  if(!cats.length){bars.innerHTML='<div class="empty">Нет расходов за этот месяц</div>';return;}
+  bars.innerHTML=cats.map(cat=>{
+    const spent=expByCat[cat]||0;
+    const lim=limits[cat]||0;
+    const pct=lim?Math.min(spent/lim*100,100):0;
+    const cls=pct>=100?'over':pct>=80?'warn':'';
+    return `<div class="budget-row">
+      <span class="cat-name">${CAT_ICONS[cat]||'📦'} ${cat}</span>
+      ${lim?`<div class="progress-wrap"><div class="progress-bar"><div class="progress-fill ${cls}" style="width:${pct}%"></div></div></div>
+      <div class="budget-nums">${fmt(spent)} / ${fmt(lim)}</div>`
+      :`<div style="font-size:12px;color:var(--muted);flex:2">${fmt(spent)}₸</div>`}
+      <button class="btn-del" onclick="deleteCat('${cat}')">×</button>
+    </div>`;
+  }).join('');
+
+  // Recent
+  const recent=list.slice(0,5);
+  const rl=document.getElementById('recentList');
+  rl.innerHTML=recent.length?recent.map(txHTML).join(''):'<div class="empty">Нет операций</div>';
+}
+
+function deleteCat(cat){
+  if(!confirm(`Удалить все операции в категории "${cat}" за этот месяц?`))return;
+  const k=monthKey(viewYear,viewMonth);
+  txs=txs.filter(t=>!(t.date.startsWith(k)&&t.cat===cat));
+  save();renderHome();
+}
+
+function txHTML(t){
+  return `<div class="tx-item">
+    <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'📦'}</div>
+    <div class="tx-info">
+      <div class="tx-desc">${t.desc}</div>
+      <div class="tx-cat">${t.cat}</div>
+    </div>
+    <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}₸</div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
+      <div class="tx-date">${t.date.slice(5)}</div>
+      <button class="btn-del" onclick="deleteTx(${t.id})">×</button>
+    </div>
+  </div>`;
+}
+
+function deleteTx(id){
+  txs=txs.filter(t=>t.id!==id);
+  save();renderHome();renderHistory();
+}
+
+// ─── Add page ────────────────────────────────────────────────────────────────
+function renderAddPage(){
+  const d=document.getElementById('fDate');
+  if(!d.value) d.value=new Date().toISOString().slice(0,10);
+  updateCatSelect();
+  renderLimits();
+}
+
+function renderLimits(){
+  const el=document.getElementById('limitsList');
+  el.innerHTML=CATS_EXPENSE.map(cat=>{
+    const v=limits[cat]||'';
+    return `<div style="display:flex;align-items:center;gap:8px;">
+      <span style="flex:1;font-size:13px;font-weight:600;">${CAT_ICONS[cat]||'📦'} ${cat}</span>
+      <input type="number" placeholder="Лимит ₸" value="${v}" min="0"
+        style="width:120px;border:1.5px solid var(--border);border-radius:8px;padding:7px 8px;font-size:13px;outline:none;"
+        onchange="setLimit('${cat}',this.value)">
+    </div>`;
+  }).join('');
+}
+
+function setLimit(cat,val){
+  if(val) limits[cat]=parseFloat(val);
+  else delete limits[cat];
+  save();
+}
+
+// ─── History ─────────────────────────────────────────────────────────────────
+function renderHistory(){
+  const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
+  const list=txs.filter(t=>t.desc.toLowerCase().includes(q)||t.cat.toLowerCase().includes(q));
+  const el=document.getElementById('historyList');
+  el.innerHTML=list.length?list.map(txHTML).join(''):'<div class="empty">Нет операций</div>';
+}
+
+// ─── Charts ───────────────────────────────────────────────────────────────────
+let barChartInst,pieChartInst,lineChartInst;
+
+function renderCharts(){
+  // Last 6 months
+  const months=[];
+  for(let i=5;i>=0;i--){
+    let m=viewMonth-i, y=viewYear;
+    if(m<0){m+=12;y--;}
+    months.push({y,m,label:new Date(y,m,1).toLocaleString('ru',{month:'short'})});
+  }
+  const incomes =months.map(({y,m})=>txsForMonth(y,m).filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0));
+  const expenses=months.map(({y,m})=>txsForMonth(y,m).filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));
+  const labels  =months.map(x=>x.label);
+
+  // Bar chart
+  if(barChartInst) barChartInst.destroy();
+  barChartInst=new Chart(document.getElementById('barChart'),{
+    type:'bar',
+    data:{labels,datasets:[
+      {label:'Доходы',data:incomes,backgroundColor:'rgba(0,154,68,.7)',borderRadius:6},
+      {label:'Расходы',data:expenses,backgroundColor:'rgba(229,57,53,.6)',borderRadius:6}
+    ]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11}}}},
+      scales:{y:{ticks:{font:{size:10},callback:v=>fmt(v)+'₸'}}}}
+  });
+
+  // Pie chart — current month expenses by category
+  const cur=txsForMonth(viewYear,viewMonth).filter(t=>t.type==='expense');
+  const catMap={};
+  cur.forEach(t=>{catMap[t.cat]=(catMap[t.cat]||0)+t.amount;});
+  const pieLabels=Object.keys(catMap);
+  const pieData  =pieLabels.map(c=>catMap[c]);
+  const palette=['#009A44','#F5A623','#1565C0','#e53935','#8E24AA','#00838F','#FF6F00','#2E7D32','#C62828'];
+
+  if(pieChartInst) pieChartInst.destroy();
+  pieChartInst=new Chart(document.getElementById('pieChart'),{
+    type:'doughnut',
+    data:{labels:pieLabels,datasets:[{data:pieData,backgroundColor:palette,borderWidth:2}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}
+  });
+
+  // Line chart — cumulative balance
+  const allMonths=[...months];
+  const balances=allMonths.map(({y,m})=>{
+    const list=txsForMonth(y,m);
+    return list.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)
+          -list.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  });
+  // cumulative
+  const cumBal=balances.reduce((acc,v,i)=>{acc.push((acc[i-1]||0)+v);return acc;},[]);
+
+  if(lineChartInst) lineChartInst.destroy();
+  lineChartInst=new Chart(document.getElementById('lineChart'),{
+    type:'line',
+    data:{labels,datasets:[{label:'Баланс',data:cumBal,borderColor:'#1565C0',backgroundColor:'rgba(21,101,192,.12)',fill:true,tension:.4,pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11}}}},
+      scales:{y:{ticks:{font:{size:10},callback:v=>fmt(v)+'₸'}}}}
+  });
+}
+
+// ─── Init ─────────────────────────────────────────────────────────────────────
+renderHome();
+</script>
+</body>
+</html>
