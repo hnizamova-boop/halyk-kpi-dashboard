@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Бюджетный трекер — Халык</title>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"></script>
 <style>
 :root{
   --accent:#009A44;--accent2:#00b84f;--gold:#F5A623;
@@ -20,19 +21,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .header h1{font-size:18px;font-weight:700;letter-spacing:.5px;}
 .header p{font-size:12px;opacity:.85;margin-top:2px;}
 
-.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);flex-shrink:0;}
-.tab{flex:1;padding:11px 4px;text-align:center;font-size:12px;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;transition:color .2s;}
+.tabs{display:flex;background:#fff;border-bottom:2px solid var(--border);flex-shrink:0;overflow-x:auto;}
+.tab{flex:1;min-width:0;padding:11px 4px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);border:none;background:none;cursor:pointer;transition:color .2s;white-space:nowrap;}
 .tab.active{color:var(--accent);border-bottom:2px solid var(--accent);margin-bottom:-2px;}
 
 .pages{flex:1;overflow:hidden;position:relative;}
 .page{position:absolute;inset:0;overflow-y:auto;padding:12px;display:none;flex-direction:column;gap:12px;}
 .page.active{display:flex;}
 
-/* Cards */
 .card{background:var(--card);border-radius:14px;padding:14px;box-shadow:0 2px 8px rgba(0,154,68,.08);border:1px solid var(--border);}
 .card-title{font-size:13px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:10px;}
 
-/* Summary row */
 .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
 .sum-box{background:var(--card);border-radius:12px;padding:12px 8px;text-align:center;box-shadow:0 2px 6px rgba(0,154,68,.07);border:1px solid var(--border);}
 .sum-box .label{font-size:10px;color:var(--muted);margin-bottom:4px;font-weight:600;text-transform:uppercase;}
@@ -41,7 +40,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .sum-box.expense .value{color:var(--red);}
 .sum-box.balance .value{color:var(--blue);}
 
-/* Form */
 .form-row{display:flex;gap:8px;flex-wrap:wrap;}
 .form-group{display:flex;flex-direction:column;gap:4px;flex:1;min-width:120px;}
 .form-group label{font-size:11px;font-weight:600;color:var(--muted);}
@@ -52,7 +50,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .btn-add:active{opacity:.8;}
 .btn-del{background:none;border:none;color:var(--red);font-size:18px;cursor:pointer;padding:0 4px;}
 
-/* Transaction list */
 .tx-list{display:flex;flex-direction:column;gap:6px;}
 .tx-item{display:flex;align-items:center;gap:10px;background:var(--card);border-radius:10px;padding:10px 12px;border:1px solid var(--border);}
 .tx-icon{width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;}
@@ -66,7 +63,6 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .tx-amount.expense{color:var(--red);}
 .tx-date{font-size:10px;color:var(--muted);flex-shrink:0;}
 
-/* Budget limits */
 .budget-row{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
 .budget-row .cat-name{flex:1;font-size:13px;font-weight:600;}
 .progress-wrap{flex:2;}
@@ -76,21 +72,45 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 .progress-fill.over{background:var(--red);}
 .budget-nums{font-size:11px;color:var(--muted);text-align:right;white-space:nowrap;}
 
-/* Chart container */
 .chart-wrap{position:relative;height:220px;}
 
-/* Month selector */
 .month-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
 .month-nav{background:none;border:1.5px solid var(--border);border-radius:8px;padding:5px 12px;cursor:pointer;font-size:16px;color:var(--accent);}
 .month-label{font-size:14px;font-weight:700;}
 
-/* Type toggle */
 .type-toggle{display:flex;gap:6px;margin-bottom:2px;}
 .type-btn{flex:1;padding:8px;border-radius:8px;border:1.5px solid var(--border);background:#fff;font-size:13px;font-weight:600;cursor:pointer;color:var(--muted);}
 .type-btn.active.income{background:#e8f5e9;color:var(--accent);border-color:var(--accent);}
 .type-btn.active.expense{background:#ffebee;color:var(--red);border-color:var(--red);}
 
 .empty{text-align:center;color:var(--muted);font-size:13px;padding:24px 0;}
+
+/* PDF upload zone */
+.drop-zone{border:2px dashed var(--border);border-radius:14px;padding:28px 16px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s;}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);background:#f0faf4;}
+.drop-zone .dz-icon{font-size:36px;margin-bottom:8px;}
+.drop-zone .dz-text{font-size:14px;font-weight:600;color:var(--text);}
+.drop-zone .dz-sub{font-size:12px;color:var(--muted);margin-top:4px;}
+#pdfFileInput{display:none;}
+
+/* PDF parse status */
+.parse-status{display:flex;align-items:center;gap:8px;font-size:13px;padding:10px 14px;border-radius:10px;background:#e8f5e9;color:var(--accent);font-weight:600;}
+.parse-status.err{background:#ffebee;color:var(--red);}
+.parse-status.loading{background:#fff8e1;color:#e65100;}
+
+/* Import preview table */
+.import-table{width:100%;border-collapse:collapse;font-size:12px;}
+.import-table th{background:#f3faf5;padding:7px 6px;text-align:left;font-size:11px;font-weight:700;color:var(--muted);border-bottom:1px solid var(--border);}
+.import-table td{padding:7px 6px;border-bottom:1px solid #f0f0f0;vertical-align:middle;}
+.import-table tr.skip td{opacity:.4;text-decoration:line-through;}
+.import-table select{border:1px solid var(--border);border-radius:6px;padding:3px 5px;font-size:11px;background:#fff;width:100%;}
+.import-table .type-dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+.import-table .type-dot.income{background:var(--accent);}
+.import-table .type-dot.expense{background:var(--red);}
+.chk{width:16px;height:16px;cursor:pointer;}
+.btn-import{background:var(--accent);color:#fff;border:none;border-radius:10px;padding:11px;font-size:14px;font-weight:700;cursor:pointer;width:100%;}
+.btn-import:active{opacity:.8;}
+.btn-outline{background:#fff;color:var(--accent);border:1.5px solid var(--accent);border-radius:10px;padding:9px;font-size:13px;font-weight:700;cursor:pointer;width:100%;}
 </style>
 </head>
 <body>
@@ -105,6 +125,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
   <button class="tab" onclick="switchTab(1)">Добавить</button>
   <button class="tab" onclick="switchTab(2)">История</button>
   <button class="tab" onclick="switchTab(3)">Аналитика</button>
+  <button class="tab" onclick="switchTab(4)">📄 Выписка</button>
 </div>
 
 <div class="pages">
@@ -116,31 +137,13 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
       <span class="month-label" id="monthLabel">—</span>
       <button class="month-nav" onclick="changeMonth(1)">›</button>
     </div>
-
     <div class="summary">
-      <div class="sum-box income">
-        <div class="label">Доходы</div>
-        <div class="value" id="sumIncome">0</div>
-      </div>
-      <div class="sum-box expense">
-        <div class="label">Расходы</div>
-        <div class="value" id="sumExpense">0</div>
-      </div>
-      <div class="sum-box balance">
-        <div class="label">Баланс</div>
-        <div class="value" id="sumBalance">0</div>
-      </div>
+      <div class="sum-box income"><div class="label">Доходы</div><div class="value" id="sumIncome">0</div></div>
+      <div class="sum-box expense"><div class="label">Расходы</div><div class="value" id="sumExpense">0</div></div>
+      <div class="sum-box balance"><div class="label">Баланс</div><div class="value" id="sumBalance">0</div></div>
     </div>
-
-    <div class="card">
-      <div class="card-title">Расходы по категориям</div>
-      <div id="budgetBars"></div>
-    </div>
-
-    <div class="card">
-      <div class="card-title">Последние операции</div>
-      <div class="tx-list" id="recentList"></div>
-    </div>
+    <div class="card"><div class="card-title">Расходы по категориям</div><div id="budgetBars"></div></div>
+    <div class="card"><div class="card-title">Последние операции</div><div class="tx-list" id="recentList"></div></div>
   </div>
 
   <!-- PAGE 1: Добавить -->
@@ -152,28 +155,15 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
           <button class="type-btn income" id="btnIncome" onclick="setType('income')">+ Доход</button>
           <button class="type-btn active expense" id="btnExpense" onclick="setType('expense')">− Расход</button>
         </div>
-        <div class="form-group">
-          <label>Описание</label>
-          <input type="text" id="fDesc" placeholder="Зарплата, еда, такси...">
-        </div>
+        <div class="form-group"><label>Описание</label><input type="text" id="fDesc" placeholder="Зарплата, еда, такси..."></div>
         <div class="form-row">
-          <div class="form-group">
-            <label>Сумма (₸)</label>
-            <input type="number" id="fAmount" placeholder="0" min="0">
-          </div>
-          <div class="form-group">
-            <label>Дата</label>
-            <input type="date" id="fDate">
-          </div>
+          <div class="form-group"><label>Сумма (₸)</label><input type="number" id="fAmount" placeholder="0" min="0"></div>
+          <div class="form-group"><label>Дата</label><input type="date" id="fDate"></div>
         </div>
-        <div class="form-group">
-          <label>Категория</label>
-          <select id="fCat"></select>
-        </div>
+        <div class="form-group"><label>Категория</label><select id="fCat"></select></div>
         <button class="btn btn-add" onclick="addTransaction()">Добавить</button>
       </div>
     </div>
-
     <div class="card">
       <div class="card-title">Лимиты по категориям расходов</div>
       <div style="display:flex;flex-direction:column;gap:8px;" id="limitsList"></div>
@@ -190,53 +180,84 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 
   <!-- PAGE 3: Аналитика -->
   <div class="page" id="page3">
+    <div class="card"><div class="card-title">Доходы vs Расходы (6 месяцев)</div><div class="chart-wrap"><canvas id="barChart"></canvas></div></div>
+    <div class="card"><div class="card-title">Структура расходов</div><div class="chart-wrap"><canvas id="pieChart"></canvas></div></div>
+    <div class="card"><div class="card-title">Динамика баланса</div><div class="chart-wrap"><canvas id="lineChart"></canvas></div></div>
+  </div>
+
+  <!-- PAGE 4: Выписка PDF -->
+  <div class="page" id="page4">
+
     <div class="card">
-      <div class="card-title">Доходы vs Расходы (6 месяцев)</div>
-      <div class="chart-wrap"><canvas id="barChart"></canvas></div>
+      <div class="card-title">Загрузить выписку из банка</div>
+      <div class="drop-zone" id="dropZone" onclick="document.getElementById('pdfFileInput').click()"
+           ondragover="event.preventDefault();this.classList.add('drag')"
+           ondragleave="this.classList.remove('drag')"
+           ondrop="onDrop(event)">
+        <div class="dz-icon">📄</div>
+        <div class="dz-text">Нажмите или перетащите PDF-файл</div>
+        <div class="dz-sub">Выписки Халык Банк, Kaspi, Народный и других банков</div>
+      </div>
+      <input type="file" id="pdfFileInput" accept=".pdf" onchange="onFileSelect(this)">
     </div>
-    <div class="card">
-      <div class="card-title">Структура расходов</div>
-      <div class="chart-wrap"><canvas id="pieChart"></canvas></div>
+
+    <div id="parseStatusWrap" style="display:none;">
+      <div class="parse-status" id="parseStatus">⏳ Читаем PDF...</div>
     </div>
-    <div class="card">
-      <div class="card-title">Динамика баланса</div>
-      <div class="chart-wrap"><canvas id="lineChart"></canvas></div>
+
+    <div id="importPreview" style="display:none;">
+      <div class="card">
+        <div class="card-title" id="importTitle">Найдено операций: 0</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <button class="btn-outline" onclick="toggleAllImport(true)">Выбрать все</button>
+          <button class="btn-outline" onclick="toggleAllImport(false)">Снять все</button>
+        </div>
+        <div style="overflow-x:auto;">
+          <table class="import-table">
+            <thead><tr>
+              <th>✓</th><th>Дата</th><th>Описание</th><th>Сумма</th><th>Тип</th><th>Категория</th>
+            </tr></thead>
+            <tbody id="importBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <button class="btn-import" onclick="importSelected()">✅ Импортировать выбранные</button>
     </div>
+
   </div>
 
 </div>
 
 <script>
+// ─── PDF.js worker ────────────────────────────────────────────────────────────
+pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.worker.min.js';
+
 // ─── Data ───────────────────────────────────────────────────────────────────
 const CATS_EXPENSE = ['Еда','Транспорт','Жильё','Здоровье','Одежда','Развлечения','Связь','Образование','Прочее'];
 const CATS_INCOME  = ['Зарплата','Фриланс','Инвестиции','Подарок','Прочее'];
 const CAT_ICONS    = {'Еда':'🍔','Транспорт':'🚗','Жильё':'🏠','Здоровье':'💊','Одежда':'👗','Развлечения':'🎭','Связь':'📱','Образование':'📚','Зарплата':'💼','Фриланс':'💻','Инвестиции':'📈','Подарок':'🎁','Прочее':'📦'};
 
-let txs   = JSON.parse(localStorage.getItem('bt_txs')   || '[]');
-let limits= JSON.parse(localStorage.getItem('bt_limits') || '{}');
+let txs    = JSON.parse(localStorage.getItem('bt_txs')   || '[]');
+let limits = JSON.parse(localStorage.getItem('bt_limits') || '{}');
 let currentType = 'expense';
-let viewYear, viewMonth; // 0-based month
+let viewYear, viewMonth;
+let parsedRows = []; // rows from PDF
 
 const now = new Date();
 viewYear  = now.getFullYear();
 viewMonth = now.getMonth();
 
-// ─── Utils ──────────────────────────────────────────────────────────────────
+// ─── Utils ───────────────────────────────────────────────────────────────────
 function save(){
   localStorage.setItem('bt_txs',   JSON.stringify(txs));
   localStorage.setItem('bt_limits',JSON.stringify(limits));
 }
 function fmt(n){return Number(n).toLocaleString('ru-KZ');}
 function monthKey(y,m){return `${y}-${String(m+1).padStart(2,'0')}`;}
-function monthName(y,m){
-  return new Date(y,m,1).toLocaleString('ru',{month:'long',year:'numeric'});
-}
-function txsForMonth(y,m){
-  const k=monthKey(y,m);
-  return txs.filter(t=>t.date.startsWith(k));
-}
+function monthName(y,m){return new Date(y,m,1).toLocaleString('ru',{month:'long',year:'numeric'});}
+function txsForMonth(y,m){const k=monthKey(y,m);return txs.filter(t=>t.date.startsWith(k));}
 
-// ─── Tab switching ───────────────────────────────────────────────────────────
+// ─── Tab switching ────────────────────────────────────────────────────────────
 function switchTab(i){
   document.querySelectorAll('.tab').forEach((t,j)=>t.classList.toggle('active',i===j));
   document.querySelectorAll('.page').forEach((p,j)=>p.classList.toggle('active',i===j));
@@ -246,7 +267,6 @@ function switchTab(i){
   if(i===3) renderCharts();
 }
 
-// ─── Month navigation ────────────────────────────────────────────────────────
 function changeMonth(d){
   viewMonth+=d;
   if(viewMonth>11){viewMonth=0;viewYear++;}
@@ -254,7 +274,6 @@ function changeMonth(d){
   renderHome();
 }
 
-// ─── Type toggle ─────────────────────────────────────────────────────────────
 function setType(t){
   currentType=t;
   document.getElementById('btnIncome').className ='type-btn'+(t==='income'?' active income':'');
@@ -267,7 +286,6 @@ function updateCatSelect(){
   sel.innerHTML=cats.map(c=>`<option>${c}</option>`).join('');
 }
 
-// ─── Add transaction ─────────────────────────────────────────────────────────
 function addTransaction(){
   const desc  =document.getElementById('fDesc').value.trim();
   const amount=parseFloat(document.getElementById('fAmount').value);
@@ -282,7 +300,7 @@ function addTransaction(){
   renderHome();
 }
 
-// ─── Home ────────────────────────────────────────────────────────────────────
+// ─── Home ─────────────────────────────────────────────────────────────────────
 function renderHome(){
   const mn=monthName(viewYear,viewMonth);
   document.getElementById('monthLabel').textContent=mn;
@@ -298,13 +316,12 @@ function renderHome(){
   document.getElementById('sumBalance').textContent=(balance>=0?'+':'')+fmt(balance)+'₸';
   document.getElementById('sumBalance').style.color=balance>=0?'var(--blue)':'var(--red)';
 
-  // Budget bars
   const bars=document.getElementById('budgetBars');
   const expByCat={};
   list.filter(t=>t.type==='expense').forEach(t=>{expByCat[t.cat]=(expByCat[t.cat]||0)+t.amount;});
   const cats=Object.keys(expByCat);
-  if(!cats.length){bars.innerHTML='<div class="empty">Нет расходов за этот месяц</div>';return;}
-  bars.innerHTML=cats.map(cat=>{
+  if(!cats.length){bars.innerHTML='<div class="empty">Нет расходов за этот месяц</div>';}
+  else bars.innerHTML=cats.map(cat=>{
     const spent=expByCat[cat]||0;
     const lim=limits[cat]||0;
     const pct=lim?Math.min(spent/lim*100,100):0;
@@ -318,10 +335,8 @@ function renderHome(){
     </div>`;
   }).join('');
 
-  // Recent
   const recent=list.slice(0,5);
-  const rl=document.getElementById('recentList');
-  rl.innerHTML=recent.length?recent.map(txHTML).join(''):'<div class="empty">Нет операций</div>';
+  document.getElementById('recentList').innerHTML=recent.length?recent.map(txHTML).join(''):'<div class="empty">Нет операций</div>';
 }
 
 function deleteCat(cat){
@@ -334,10 +349,7 @@ function deleteCat(cat){
 function txHTML(t){
   return `<div class="tx-item">
     <div class="tx-icon ${t.type}">${CAT_ICONS[t.cat]||'📦'}</div>
-    <div class="tx-info">
-      <div class="tx-desc">${t.desc}</div>
-      <div class="tx-cat">${t.cat}</div>
-    </div>
+    <div class="tx-info"><div class="tx-desc">${t.desc}</div><div class="tx-cat">${t.cat}</div></div>
     <div class="tx-amount ${t.type}">${t.type==='income'?'+':'-'}${fmt(t.amount)}₸</div>
     <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px;">
       <div class="tx-date">${t.date.slice(5)}</div>
@@ -346,12 +358,8 @@ function txHTML(t){
   </div>`;
 }
 
-function deleteTx(id){
-  txs=txs.filter(t=>t.id!==id);
-  save();renderHome();renderHistory();
-}
+function deleteTx(id){txs=txs.filter(t=>t.id!==id);save();renderHome();renderHistory();}
 
-// ─── Add page ────────────────────────────────────────────────────────────────
 function renderAddPage(){
   const d=document.getElementById('fDate');
   if(!d.value) d.value=new Date().toISOString().slice(0,10);
@@ -360,8 +368,7 @@ function renderAddPage(){
 }
 
 function renderLimits(){
-  const el=document.getElementById('limitsList');
-  el.innerHTML=CATS_EXPENSE.map(cat=>{
+  document.getElementById('limitsList').innerHTML=CATS_EXPENSE.map(cat=>{
     const v=limits[cat]||'';
     return `<div style="display:flex;align-items:center;gap:8px;">
       <span style="flex:1;font-size:13px;font-weight:600;">${CAT_ICONS[cat]||'📦'} ${cat}</span>
@@ -378,73 +385,239 @@ function setLimit(cat,val){
   save();
 }
 
-// ─── History ─────────────────────────────────────────────────────────────────
 function renderHistory(){
   const q=(document.getElementById('searchInput')?.value||'').toLowerCase();
   const list=txs.filter(t=>t.desc.toLowerCase().includes(q)||t.cat.toLowerCase().includes(q));
-  const el=document.getElementById('historyList');
-  el.innerHTML=list.length?list.map(txHTML).join(''):'<div class="empty">Нет операций</div>';
+  document.getElementById('historyList').innerHTML=list.length?list.map(txHTML).join(''):'<div class="empty">Нет операций</div>';
 }
 
 // ─── Charts ───────────────────────────────────────────────────────────────────
 let barChartInst,pieChartInst,lineChartInst;
-
 function renderCharts(){
-  // Last 6 months
   const months=[];
-  for(let i=5;i>=0;i--){
-    let m=viewMonth-i, y=viewYear;
-    if(m<0){m+=12;y--;}
-    months.push({y,m,label:new Date(y,m,1).toLocaleString('ru',{month:'short'})});
-  }
+  for(let i=5;i>=0;i--){let m=viewMonth-i,y=viewYear;if(m<0){m+=12;y--;}months.push({y,m,label:new Date(y,m,1).toLocaleString('ru',{month:'short'})});}
   const incomes =months.map(({y,m})=>txsForMonth(y,m).filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0));
   const expenses=months.map(({y,m})=>txsForMonth(y,m).filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0));
   const labels  =months.map(x=>x.label);
 
-  // Bar chart
   if(barChartInst) barChartInst.destroy();
-  barChartInst=new Chart(document.getElementById('barChart'),{
-    type:'bar',
-    data:{labels,datasets:[
-      {label:'Доходы',data:incomes,backgroundColor:'rgba(0,154,68,.7)',borderRadius:6},
-      {label:'Расходы',data:expenses,backgroundColor:'rgba(229,57,53,.6)',borderRadius:6}
-    ]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11}}}},
-      scales:{y:{ticks:{font:{size:10},callback:v=>fmt(v)+'₸'}}}}
-  });
+  barChartInst=new Chart(document.getElementById('barChart'),{type:'bar',data:{labels,datasets:[
+    {label:'Доходы',data:incomes,backgroundColor:'rgba(0,154,68,.7)',borderRadius:6},
+    {label:'Расходы',data:expenses,backgroundColor:'rgba(229,57,53,.6)',borderRadius:6}
+  ]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11}}}},scales:{y:{ticks:{font:{size:10},callback:v=>fmt(v)+'₸'}}}}});
 
-  // Pie chart — current month expenses by category
   const cur=txsForMonth(viewYear,viewMonth).filter(t=>t.type==='expense');
-  const catMap={};
-  cur.forEach(t=>{catMap[t.cat]=(catMap[t.cat]||0)+t.amount;});
+  const catMap={};cur.forEach(t=>{catMap[t.cat]=(catMap[t.cat]||0)+t.amount;});
   const pieLabels=Object.keys(catMap);
-  const pieData  =pieLabels.map(c=>catMap[c]);
   const palette=['#009A44','#F5A623','#1565C0','#e53935','#8E24AA','#00838F','#FF6F00','#2E7D32','#C62828'];
-
   if(pieChartInst) pieChartInst.destroy();
-  pieChartInst=new Chart(document.getElementById('pieChart'),{
-    type:'doughnut',
-    data:{labels:pieLabels,datasets:[{data:pieData,backgroundColor:palette,borderWidth:2}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}
-  });
+  pieChartInst=new Chart(document.getElementById('pieChart'),{type:'doughnut',data:{labels:pieLabels,datasets:[{data:pieLabels.map(c=>catMap[c]),backgroundColor:palette,borderWidth:2}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},boxWidth:12}}}}});
 
-  // Line chart — cumulative balance
-  const allMonths=[...months];
-  const balances=allMonths.map(({y,m})=>{
-    const list=txsForMonth(y,m);
-    return list.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)
-          -list.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
-  });
-  // cumulative
+  const balances=months.map(({y,m})=>{const l=txsForMonth(y,m);return l.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0)-l.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);});
   const cumBal=balances.reduce((acc,v,i)=>{acc.push((acc[i-1]||0)+v);return acc;},[]);
-
   if(lineChartInst) lineChartInst.destroy();
-  lineChartInst=new Chart(document.getElementById('lineChart'),{
-    type:'line',
-    data:{labels,datasets:[{label:'Баланс',data:cumBal,borderColor:'#1565C0',backgroundColor:'rgba(21,101,192,.12)',fill:true,tension:.4,pointRadius:4}]},
-    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11}}}},
-      scales:{y:{ticks:{font:{size:10},callback:v=>fmt(v)+'₸'}}}}
+  lineChartInst=new Chart(document.getElementById('lineChart'),{type:'line',data:{labels,datasets:[{label:'Баланс',data:cumBal,borderColor:'#1565C0',backgroundColor:'rgba(21,101,192,.12)',fill:true,tension:.4,pointRadius:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{font:{size:11}}}},scales:{y:{ticks:{font:{size:10},callback:v=>fmt(v)+'₸'}}}}});
+}
+
+// ─── PDF Import ───────────────────────────────────────────────────────────────
+
+function onDrop(e){
+  e.preventDefault();
+  document.getElementById('dropZone').classList.remove('drag');
+  const file=e.dataTransfer.files[0];
+  if(file&&file.type==='application/pdf') processPDF(file);
+  else alert('Пожалуйста, загрузите PDF-файл');
+}
+
+function onFileSelect(input){
+  const file=input.files[0];
+  if(file) processPDF(file);
+  input.value='';
+}
+
+async function processPDF(file){
+  const statusWrap=document.getElementById('parseStatusWrap');
+  const statusEl  =document.getElementById('parseStatus');
+  const previewEl =document.getElementById('importPreview');
+
+  statusWrap.style.display='block';
+  previewEl.style.display='none';
+  statusEl.className='parse-status loading';
+  statusEl.textContent='⏳ Читаем PDF...';
+
+  try{
+    const buf=await file.arrayBuffer();
+    const pdf=await pdfjsLib.getDocument({data:buf}).promise;
+    let fullText='';
+
+    for(let p=1;p<=pdf.numPages;p++){
+      const page=await pdf.getPage(p);
+      const content=await page.getTextContent();
+      // sort items by vertical then horizontal position for correct reading order
+      const items=[...content.items].sort((a,b)=>{
+        const dy=Math.round(b.transform[5])-Math.round(a.transform[5]);
+        return dy!==0?dy:a.transform[4]-b.transform[4];
+      });
+      fullText+=items.map(i=>i.str).join(' ')+'\n';
+    }
+
+    statusEl.textContent='🔍 Распознаём операции...';
+    const rows=parseTransactions(fullText);
+
+    if(!rows.length){
+      statusEl.className='parse-status err';
+      statusEl.textContent='❌ Операции не найдены. Попробуйте другой файл.';
+      return;
+    }
+
+    parsedRows=rows;
+    statusEl.className='parse-status';
+    statusEl.textContent=`✅ Найдено ${rows.length} операций`;
+    renderImportTable(rows);
+    previewEl.style.display='block';
+
+  }catch(err){
+    statusEl.className='parse-status err';
+    statusEl.textContent='❌ Ошибка чтения PDF: '+err.message;
+  }
+}
+
+// ─── Transaction parser ───────────────────────────────────────────────────────
+function parseTransactions(text){
+  const rows=[];
+  const lines=text.split(/\n/);
+
+  // Pattern 1: DD.MM.YYYY ... amount (Halyk / common KZ format)
+  // Pattern 2: YYYY-MM-DD ... amount
+  // Looks for lines containing a date and a number that looks like a sum
+  const dateRe=/\b(\d{2})[.\/](\d{2})[.\/](\d{4})\b|\b(\d{4})-(\d{2})-(\d{2})\b/;
+  const amountRe=/[\+\-]?\s*(\d[\d\s,.']*\d|\d+)\s*(?:₸|KZT|тг|тенге)?/gi;
+
+  // Common KZ bank keywords for income detection
+  const incomeKw=['зачисление','пополнение','перевод от','зарплата','оклад','поступление','salary','incoming','приход','return','возврат','cashback','кэшбэк'];
+  const expenseKw=['оплата','покупка','снятие','списание','перевод','payment','purchase','withdraw','расход','comission','комиссия'];
+
+  for(const line of lines){
+    const dateMatch=line.match(dateRe);
+    if(!dateMatch) continue;
+
+    // Parse date
+    let date;
+    if(dateMatch[1]){
+      // DD.MM.YYYY
+      date=`${dateMatch[3]}-${dateMatch[2]}-${dateMatch[1]}`;
+    } else {
+      // YYYY-MM-DD
+      date=`${dateMatch[4]}-${dateMatch[5]}-${dateMatch[6]}`;
+    }
+
+    // Find amounts in line — take the largest one (usually the transaction amount)
+    const numMatches=[...line.matchAll(/[\+\-]?\s*([\d\s]+(?:[.,]\d+)?)\s*(?:₸|KZT|тг)?/g)];
+    let amount=0;
+    let rawAmt='';
+    for(const m of numMatches){
+      const cleaned=m[1].replace(/\s/g,'').replace(',','.');
+      const val=parseFloat(cleaned);
+      if(val>amount&&val<1e10){amount=val;rawAmt=m[0];}
+    }
+    if(!amount) continue;
+
+    // Determine description: everything except date & amount tokens
+    let desc=line
+      .replace(dateRe,'')
+      .replace(new RegExp(rawAmt.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')),'')
+      .replace(/[₸KZT]/g,'')
+      .replace(/\s{2,}/g,' ')
+      .trim()
+      .slice(0,60);
+    if(!desc) desc='Операция';
+
+    // Determine type
+    const lc=line.toLowerCase();
+    let type='expense';
+    if(incomeKw.some(k=>lc.includes(k))) type='income';
+    else if(line.includes('+')) type='income';
+    else if(expenseKw.some(k=>lc.includes(k))) type='expense';
+
+    // Auto-detect category
+    const cat=guessCategory(desc+' '+lc, type);
+
+    rows.push({date,desc,amount,type,cat,include:true});
+  }
+
+  // Deduplicate by date+amount+desc
+  const seen=new Set();
+  return rows.filter(r=>{
+    const key=`${r.date}|${r.amount}|${r.desc.slice(0,20)}`;
+    if(seen.has(key)) return false;
+    seen.add(key);
+    return true;
   });
+}
+
+function guessCategory(text, type){
+  const t=text.toLowerCase();
+  if(type==='income'){
+    if(/зарплат|оклад|salary/.test(t)) return 'Зарплата';
+    if(/фриланс|freelance/.test(t)) return 'Фриланс';
+    if(/дивиденд|инвест/.test(t)) return 'Инвестиции';
+    return 'Прочее';
+  }
+  if(/магазин|супермаркет|продукт|еда|food|cafe|кафе|ресторан|restaurant|delivery|доставка|market|рынок/.test(t)) return 'Еда';
+  if(/такси|taxi|uber|яндекс\.такси|автобус|метро|бензин|парковка|transport|жд|поезд|авиа/.test(t)) return 'Транспорт';
+  if(/аренда|квартира|коммунал|жкх|электр|газ|вода|жильё/.test(t)) return 'Жильё';
+  if(/аптека|больниц|клиник|здоров|медицин|pharmacy|doctor/.test(t)) return 'Здоровье';
+  if(/одежда|магазин одежды|zara|h&m|adidas|nike/.test(t)) return 'Одежда';
+  if(/кино|театр|развлеч|игра|game|netflix|spotify|music/.test(t)) return 'Развлечения';
+  if(/телефон|интернет|связь|мобильный|sim|beeline|kcell|tele2|activ/.test(t)) return 'Связь';
+  if(/курс|обучен|универс|школа|образован|book|книга/.test(t)) return 'Образование';
+  return 'Прочее';
+}
+
+// ─── Import table render ──────────────────────────────────────────────────────
+function renderImportTable(rows){
+  document.getElementById('importTitle').textContent=`Найдено операций: ${rows.length}`;
+  const allCats=[...CATS_EXPENSE,...CATS_INCOME];
+  document.getElementById('importBody').innerHTML=rows.map((r,i)=>{
+    const catOpts=allCats.map(c=>`<option value="${c}" ${c===r.cat?'selected':''}>${c}</option>`).join('');
+    const typeOpts=`<option value="expense" ${r.type==='expense'?'selected':''}>− Расход</option>
+                    <option value="income"  ${r.type==='income' ?'selected':''}>+ Доход</option>`;
+    return `<tr id="irow_${i}">
+      <td><input type="checkbox" class="chk" id="chk_${i}" checked onchange="toggleRow(${i})"></td>
+      <td style="white-space:nowrap;font-size:11px;">${r.date.slice(5)}.${r.date.slice(0,4)}</td>
+      <td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${r.desc}">${r.desc}</td>
+      <td style="white-space:nowrap;font-weight:700;">${fmt(r.amount)}₸</td>
+      <td><select onchange="parsedRows[${i}].type=this.value">${typeOpts}</select></td>
+      <td><select onchange="parsedRows[${i}].cat=this.value">${catOpts}</select></td>
+    </tr>`;
+  }).join('');
+}
+
+function toggleRow(i){
+  parsedRows[i].include=document.getElementById('chk_'+i).checked;
+  document.getElementById('irow_'+i).classList.toggle('skip',!parsedRows[i].include);
+}
+
+function toggleAllImport(val){
+  parsedRows.forEach((_,i)=>{
+    parsedRows[i].include=val;
+    const chk=document.getElementById('chk_'+i);
+    if(chk) chk.checked=val;
+    document.getElementById('irow_'+i).classList.toggle('skip',!val);
+  });
+}
+
+function importSelected(){
+  const selected=parsedRows.filter(r=>r.include);
+  if(!selected.length){alert('Нет выбранных операций');return;}
+  selected.forEach(r=>{
+    txs.unshift({id:Date.now()+Math.random(),type:r.type,desc:r.desc,amount:r.amount,date:r.date,cat:r.cat});
+  });
+  save();
+  document.getElementById('importPreview').style.display='none';
+  document.getElementById('parseStatusWrap').style.display='none';
+  alert(`✅ Импортировано ${selected.length} операций!`);
+  switchTab(0);
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
