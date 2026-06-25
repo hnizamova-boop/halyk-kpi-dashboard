@@ -116,8 +116,17 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;backgrou
 <body>
 
 <div class="header">
-  <h1>💰 Бюджетный трекер</h1>
-  <p id="headerMonth">загрузка...</p>
+  <div style="display:flex;align-items:center;justify-content:space-between;">
+    <div>
+      <h1>💰 Бюджетный трекер</h1>
+      <p id="headerMonth">загрузка...</p>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="exportData()" title="Сохранить данные" style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.5);border-radius:8px;color:#fff;padding:6px 10px;font-size:13px;cursor:pointer;font-weight:700;">💾</button>
+      <button onclick="document.getElementById('importJsonInput').click()" title="Загрузить данные" style="background:rgba(255,255,255,0.2);border:1.5px solid rgba(255,255,255,0.5);border-radius:8px;color:#fff;padding:6px 10px;font-size:13px;cursor:pointer;font-weight:700;">📂</button>
+      <input type="file" id="importJsonInput" accept=".json" style="display:none" onchange="importData(this)">
+    </div>
+  </div>
 </div>
 
 <div class="tabs">
@@ -618,6 +627,41 @@ function importSelected(){
   document.getElementById('parseStatusWrap').style.display='none';
   alert(`✅ Импортировано ${selected.length} операций!`);
   switchTab(0);
+}
+
+// ─── Export / Import JSON ─────────────────────────────────────────────────────
+function exportData(){
+  const data={txs,limits,exportedAt:new Date().toISOString()};
+  const blob=new Blob([JSON.stringify(data,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  const date=new Date().toISOString().slice(0,10);
+  a.href=url;
+  a.download=`budget_backup_${date}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(input){
+  const file=input.files[0];
+  if(!file) return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!Array.isArray(data.txs)) throw new Error('Неверный формат файла');
+      if(!confirm(`Загрузить ${data.txs.length} операций из файла?\nТекущие данные будут заменены.`)){input.value='';return;}
+      txs   = data.txs;
+      limits= data.limits||{};
+      save();
+      renderHome();
+      alert('✅ Данные успешно загружены!');
+    }catch(err){
+      alert('❌ Ошибка загрузки: '+err.message);
+    }
+    input.value='';
+  };
+  reader.readAsText(file);
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
